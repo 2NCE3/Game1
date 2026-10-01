@@ -106,10 +106,10 @@ export const CadetGuideBanner: React.FC<CadetGuideBannerProps> = ({
   if (!cadetMode) {
     // Compact bar when Cadet Mode is turned off
     return (
-      <div className="w-full bg-space-900/70 border-b border-slate-800 px-4 py-2 flex items-center justify-between text-xs font-mono text-slate-400">
+      <div className="w-full bg-black/40 backdrop-blur-2xl border-b border-white/10 px-4 py-2 flex items-center justify-between text-xs font-sans text-slate-400">
         <div className="flex items-center gap-2">
-          <span className="text-nasa-cyan font-bold">PHASE {stepNumber}/{totalSteps}:</span>
-          <span className="text-white font-semibold">{title}</span>
+          <span className="text-[#0071e3] font-semibold">Phase {stepNumber}/{totalSteps}:</span>
+          <span className="text-white font-medium">{title}</span>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -117,17 +117,17 @@ export const CadetGuideBanner: React.FC<CadetGuideBannerProps> = ({
               sounds.playClick();
               toggleCadetMode();
             }}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-300 transition-all cursor-pointer"
             title="Enable child-friendly Cadet Guide"
           >
-            <GraduationCap className="w-3.5 h-3.5 text-nasa-orange" />
-            <span>Enable Cadet Mode 👨‍🚀</span>
+            <GraduationCap className="w-3.5 h-3.5 text-sky-400" />
+            <span>Enable Cadet Mode</span>
           </button>
           <button
             onClick={handleNext}
             disabled={disableNext}
-            className={`flex items-center gap-1 px-3 py-1 rounded-lg text-white font-bold transition-all ${
-              disableNext ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-nasa-orange hover:bg-orange-500'
+            className={`flex items-center gap-1 px-4 py-1 rounded-full text-white font-semibold transition-all ${
+              disableNext ? 'bg-white/10 text-slate-500 cursor-not-allowed' : 'bg-[#0071e3] hover:bg-[#0077ed] cursor-pointer'
             }`}
           >
             <span>Next</span>
@@ -142,11 +142,11 @@ export const CadetGuideBanner: React.FC<CadetGuideBannerProps> = ({
     <motion.div 
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full bg-gradient-to-r from-space-950 via-space-900 to-space-950 border-b-2 border-nasa-orange/40 shadow-xl flex flex-col z-30 select-none"
+      className="w-full bg-black/60 backdrop-blur-2xl border-b border-white/10 shadow-lg flex flex-col z-30 select-none font-sans"
     >
-      {/* Visual Step-by-Step Working Progress Ribbon (1 to 8) */}
-      <div className="px-3 sm:px-6 pt-2.5 pb-2 border-b border-slate-800/80 bg-space-950/70 overflow-x-auto scrollbar-none">
-        <div className="flex items-center justify-between min-w-[620px] max-w-5xl mx-auto gap-1">
+      {/* Visual Step-by-Step Working Progress Ribbon (1 to 6) */}
+      <div className="px-3 sm:px-6 pt-2 pb-2 border-b border-white/10 bg-white/[0.02] overflow-x-auto scrollbar-none">
+        <div className="flex items-center justify-between min-w-[620px] max-w-5xl mx-auto gap-1.5">
           {DESIGN_STEPS.map((s, idx) => {
             const isCurrent = state.currentStep === s.id;
             const completed = isStepCompleted(s.id);
@@ -163,29 +163,29 @@ export const CadetGuideBanner: React.FC<CadetGuideBannerProps> = ({
                       setStep(s.id);
                     }
                   }}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl font-mono text-xs transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
                     isCurrent
-                      ? 'bg-gradient-to-r from-nasa-orange to-amber-500 text-white font-bold shadow-md shadow-nasa-orange/30 ring-2 ring-nasa-orange/50 scale-105'
+                      ? 'bg-white text-black font-semibold shadow-sm scale-102'
                       : completed
-                        ? 'bg-emerald-950/40 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/40'
+                        ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/25'
                         : isClickable
-                          ? 'bg-space-900/90 border border-slate-800 text-slate-400 hover:text-slate-200'
-                          : 'opacity-40 text-slate-600 cursor-not-allowed'
+                          ? 'bg-white/[0.05] border border-white/10 text-slate-300 hover:text-white hover:bg-white/10'
+                          : 'opacity-40 text-slate-500 cursor-not-allowed'
                   }`}
                   title={`Step ${s.num}: ${s.label}`}
                 >
-                  <span className="text-sm">{s.emoji}</span>
-                  <span className="hidden sm:inline font-sans text-[11px] font-semibold">
+                  <span className="text-xs">{s.emoji}</span>
+                  <span className="hidden sm:inline text-[11px]">
                     {s.num}. {s.shortLabel}
                   </span>
                   {completed && !isCurrent && (
-                    <Check className="w-3 h-3 text-emerald-400 stroke-[3]" />
+                    <Check className="w-3 h-3 text-emerald-400 stroke-[2.5]" />
                   )}
                 </button>
 
                 {/* Arrow connector between steps */}
                 {idx < DESIGN_STEPS.length - 1 && (
-                  <span className={`text-[10px] ${idx < stepNumber - 1 ? 'text-emerald-500' : 'text-slate-700'}`}>
+                  <span className={`text-[10px] ${idx < stepNumber - 1 ? 'text-emerald-400' : 'text-slate-600'}`}>
                     ➔
                   </span>
                 )}
@@ -196,77 +196,75 @@ export const CadetGuideBanner: React.FC<CadetGuideBannerProps> = ({
       </div>
 
       {/* Commander Nova Guidance & Actions Bar */}
-      <div className="px-4 py-3 sm:px-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+      <div className="px-4 py-2.5 sm:px-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         {/* Left: Commander Nova Avatar & Kid-friendly question */}
-        <div className="flex items-center gap-3.5">
+        <div className="flex items-center gap-3">
           {/* Astronaut Avatar with Friendly Animation */}
           <div className="relative shrink-0">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-nasa-orange via-amber-500 to-red-600 p-0.5 shadow-lg shadow-nasa-orange/30">
-              <div className="w-full h-full bg-space-950 rounded-[14px] flex items-center justify-center text-2xl hover:scale-110 transition-transform">
-                👨‍🚀
-              </div>
+            <div className="w-10 h-10 rounded-2xl bg-white/[0.08] border border-white/15 flex items-center justify-center text-xl shadow-inner">
+              👨‍🚀
             </div>
-            <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full bg-emerald-500 text-black text-[9px] font-black font-mono">
-              GUIDE
+            <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full bg-emerald-500 text-black text-[8px] font-bold tracking-tight">
+              AI
             </span>
           </div>
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full bg-nasa-orange/20 border border-nasa-orange/50 text-nasa-orange text-[10px] font-mono font-bold uppercase tracking-wider">
-                STEP {stepNumber} OF {totalSteps}: {title}
+              <span className="px-2 py-0.5 rounded-full bg-sky-500/15 border border-sky-500/30 text-sky-400 text-[10px] font-semibold uppercase tracking-wider">
+                Step {stepNumber} of {totalSteps}: {title}
               </span>
-              <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
-                Commander Nova's Mission Briefing
+              <span className="text-[11px] text-slate-400 hidden sm:inline">
+                Mission Guidance
               </span>
             </div>
 
-            <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-1.5 mt-0.5">
+            <h3 className="text-xs sm:text-sm font-semibold text-white flex items-center gap-1.5 mt-0.5 tracking-tight">
               <span>{childQuestion}</span>
             </h3>
 
-            <p className="text-xs text-amber-200/90 font-sans mt-0.5 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <p className="text-[11px] text-slate-300 font-sans mt-0.5 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
               <span>{childTip}</span>
             </p>
           </div>
         </div>
 
         {/* Right: Quick Action Buttons */}
-        <div className="flex items-center gap-2 w-full md:w-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-slate-800/80 shrink-0">
+        <div className="flex items-center gap-2 w-full md:w-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-white/10 shrink-0">
           {/* Magic Help Button */}
           <button
             onClick={handleAutoBalance}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-950/70 hover:bg-purple-900/90 border border-purple-500/70 text-purple-200 text-xs font-mono font-bold transition-all shadow-md hover:scale-102"
-            title="Commander Nova will automatically balance mass, power, and fuel for you!"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500/15 hover:bg-purple-500/25 border border-purple-400/30 text-purple-200 text-xs font-medium transition-all active:scale-[0.98] cursor-pointer"
+            title="Commander Nova will automatically balance mass, power, and fuel for you"
           >
-            <Wand2 className="w-3.5 h-3.5 text-purple-400 animate-spin-slow" />
-            <span>HELP ME CHOOSE ✨</span>
+            <Wand2 className="w-3.5 h-3.5 text-purple-300" />
+            <span>Auto Recommend</span>
           </button>
 
           {/* Back Button */}
           {stepNumber > 1 && (
             <button
               onClick={handlePrev}
-              className="flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-mono font-medium transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-slate-300 text-xs font-medium transition-all active:scale-[0.98] cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Back</span>
             </button>
           )}
 
-          {/* Next Step Button (Big, Prominent, High Contrast) */}
+          {/* Next Step Button (Apple Blue Pill) */}
           <button
             onClick={handleNext}
             disabled={disableNext}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-mono text-xs font-bold uppercase tracking-wider transition-all shadow-lg ${
+            className={`flex items-center gap-1.5 px-5 py-1.5 rounded-full text-xs font-semibold tracking-tight transition-all shadow-sm ${
               disableNext
-                ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
-                : 'bg-gradient-to-r from-nasa-orange via-orange-500 to-red-600 hover:from-orange-500 hover:to-red-500 text-white shadow-nasa-orange/30 cursor-pointer hover:scale-102 ring-2 ring-orange-400/40'
+                ? 'bg-white/10 text-slate-500 border border-white/10 cursor-not-allowed'
+                : 'bg-[#0071e3] hover:bg-[#0077ed] text-white shadow-[#0071e3]/20 cursor-pointer active:scale-[0.98]'
             }`}
           >
-            <span>{stepNumber === totalSteps ? 'GO TO LAUNCHPAD' : 'NEXT STEP'}</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>{stepNumber === totalSteps ? 'Proceed to Launchpad' : 'Continue'}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

@@ -42,21 +42,32 @@ export const TopBar: React.FC = () => {
     setSoundEnabled(next);
   };
 
-  // Status color badge
+  // Status color badge (Minimal Apple Style)
   const getStatusBadge = () => {
     switch (state.status) {
       case 'DRAFT':
-        return 'bg-slate-800/80 text-slate-300 border-slate-700';
+        return 'bg-white/5 text-slate-300 border-white/10';
       case 'READY':
-        return 'bg-emerald-950/60 text-emerald-400 border-emerald-600/50 glow-green';
+        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
       case 'IN FLIGHT':
-        return 'bg-cyan-950/60 text-nasa-cyan border-nasa-cyan/60 animate-pulse';
+        return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
       case 'COMPLETE':
-        return 'bg-blue-950/60 text-blue-400 border-blue-500/50';
+        return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
       case 'FAILED':
-        return 'bg-red-950/80 text-red-400 border-red-500/60 glow-red';
+        return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
       default:
-        return 'bg-slate-800 text-slate-300 border-slate-700';
+        return 'bg-white/5 text-slate-300 border-white/10';
+    }
+  };
+
+  const getStatusLabel = () => {
+    switch (state.status) {
+      case 'DRAFT': return 'Drafting';
+      case 'READY': return 'Ready';
+      case 'IN FLIGHT': return 'In Flight';
+      case 'COMPLETE': return 'Completed';
+      case 'FAILED': return 'Failed';
+      default: return 'Draft';
     }
   };
 
@@ -70,32 +81,32 @@ export const TopBar: React.FC = () => {
 
   return (
     <>
-      <header className="h-16 bg-space-950/90 border-b border-slate-800/80 px-4 flex items-center justify-between gap-4 sticky top-0 z-40 backdrop-blur-md">
+      <header className="h-16 bg-black/60 border-b border-white/10 px-4 flex items-center justify-between gap-4 sticky top-0 z-40 backdrop-blur-2xl">
         {/* Left: Brand & Status & Mission Name */}
         <div className="flex items-center gap-4 min-w-[280px]">
           {/* Logo */}
           <div className="flex items-center gap-2.5 cursor-pointer">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-nasa-orange to-red-600 flex items-center justify-center text-white shadow-lg shadow-nasa-orange/20 border border-orange-400/30">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#0071e3] to-cyan-400 flex items-center justify-center text-white shadow-sm">
               <Rocket className="w-4 h-4 -rotate-45" />
             </div>
             <div>
-              <div className="font-display font-black text-sm tracking-wider text-white flex items-center gap-1.5">
-                <span>MISSIONFORGE</span>
-                <span className="text-[9px] px-1 py-0.2 rounded bg-nasa-orange/20 border border-nasa-orange/40 text-nasa-orange font-mono font-normal">
+              <div className="font-semibold text-sm tracking-tight text-white flex items-center gap-2">
+                <span>MissionForge</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/25 text-blue-400 font-medium">
                   2026 NASA
                 </span>
               </div>
-              <div className="text-[9px] text-slate-400 font-mono tracking-widest uppercase">
-                DESIGN. DECIDE. LAUNCH.
+              <div className="text-[10px] text-[#86868b] tracking-normal font-normal">
+                Design. Decide. Launch.
               </div>
             </div>
           </div>
 
-          <div className="h-6 w-px bg-slate-800 hidden sm:block" />
+          <div className="h-6 w-px bg-white/10 hidden sm:block" />
 
           {/* Status Badge */}
-          <div className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold tracking-widest uppercase border ${getStatusBadge()}`}>
-            {state.status}
+          <div className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${getStatusBadge()}`}>
+            {getStatusLabel()}
           </div>
 
           {/* Mission Name */}
@@ -108,7 +119,7 @@ export const TopBar: React.FC = () => {
                   onChange={(e) => setTempName(e.target.value)}
                   onBlur={() => setIsEditingName(false)}
                   autoFocus
-                  className="bg-space-900 border border-nasa-cyan px-2 py-0.5 rounded text-xs font-mono text-white focus:outline-none"
+                  className="bg-black/40 border border-[#0071e3]/50 px-2 py-0.5 rounded-lg text-xs font-sans text-white focus:outline-none"
                 />
               </form>
             ) : (
@@ -117,7 +128,7 @@ export const TopBar: React.FC = () => {
                   setTempName(state.missionName);
                   setIsEditingName(true);
                 }}
-                className="text-xs font-mono text-slate-300 hover:text-white cursor-pointer px-1.5 py-0.5 rounded hover:bg-slate-800/60 transition-colors flex items-center gap-1"
+                className="text-xs font-sans text-slate-300 hover:text-white cursor-pointer px-2 py-1 rounded-lg hover:bg-white/[0.06] transition-colors flex items-center gap-1.5"
                 title="Click to rename mission"
               >
                 <span>{state.missionName}</span>
@@ -128,22 +139,22 @@ export const TopBar: React.FC = () => {
         </div>
 
         {/* Center: Live Resource Indicators */}
-        <div className="hidden lg:flex items-center gap-2 xl:gap-3">
+        <div className="hidden lg:flex items-center gap-2 xl:gap-2.5">
           {/* BUDGET */}
           <Tooltip 
             title="Mission Budget Allocation" 
             content="Total cost of spacecraft bus, scientific payload, launch vehicle, and systems against Congressional appropriation."
             tip="Exceeding budget risks mission cancellation."
           >
-            <div className={`flex items-center gap-2 px-2.5 py-1 rounded-md border text-xs font-mono transition-all ${
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-sans transition-all ${
               resources.isOverBudget 
-                ? 'bg-red-950/50 border-red-500/60 text-red-400' 
-                : 'bg-space-900/60 border-slate-800 text-slate-300'
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-300' 
+                : 'bg-white/[0.04] border-white/10 text-slate-300'
             }`}>
-              <DollarSign className={`w-3.5 h-3.5 ${resources.isOverBudget ? 'text-red-400' : 'text-emerald-400'}`} />
+              <DollarSign className={`w-3.5 h-3.5 ${resources.isOverBudget ? 'text-rose-400' : 'text-emerald-400'}`} />
               <div className="flex flex-col">
-                <span className="text-[9px] text-slate-400 leading-none">BUDGET</span>
-                <span className="telemetry-val text-[11px] font-bold font-mono">
+                <span className="text-[9px] text-[#86868b] leading-none mb-0.5">Budget</span>
+                <span className="telemetry-val text-[11px] font-medium">
                   ${resources.totalCost}M <span className="text-slate-500 font-normal">/ ${resources.budgetLimit}M</span>
                 </span>
               </div>
@@ -152,35 +163,35 @@ export const TopBar: React.FC = () => {
 
           {/* MASS */}
           <Tooltip glossaryKey="mass-margin">
-            <div className={`flex items-center gap-2 px-2.5 py-1 rounded-md border text-xs font-mono transition-all ${
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-sans transition-all ${
               resources.isOverMass 
-                ? 'bg-red-950/60 border-red-500/80 text-red-400 animate-pulse' 
-                : 'bg-space-900/60 border-slate-800 text-slate-300'
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-300' 
+                : 'bg-white/[0.04] border-white/10 text-slate-300'
             }`}>
-              <Weight className={`w-3.5 h-3.5 ${resources.isOverMass ? 'text-red-400' : 'text-cyan-400'}`} />
+              <Weight className={`w-3.5 h-3.5 ${resources.isOverMass ? 'text-rose-400' : 'text-cyan-400'}`} />
               <div className="flex flex-col">
-                <span className="text-[9px] text-slate-400 leading-none">MASS</span>
-                <span className="telemetry-val text-[11px] font-bold font-mono">
+                <span className="text-[9px] text-[#86868b] leading-none mb-0.5">Mass</span>
+                <span className="telemetry-val text-[11px] font-medium">
                   {resources.totalMass.toLocaleString()} kg <span className="text-slate-500 font-normal">/ {resources.massLimit.toLocaleString()}</span>
                 </span>
               </div>
-              {resources.isOverMass && <AlertTriangle className="w-3.5 h-3.5 text-red-400 ml-1" />}
+              {resources.isOverMass && <AlertTriangle className="w-3.5 h-3.5 text-rose-400 ml-1" />}
             </div>
           </Tooltip>
 
           {/* POWER */}
           <Tooltip glossaryKey="power-reserve">
-            <div className={`flex items-center gap-2 px-2.5 py-1 rounded-md border text-xs font-mono transition-all ${
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-sans transition-all ${
               resources.isPowerDeficit 
-                ? 'bg-red-950/50 border-red-500/60 text-red-400' 
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-300' 
                 : (resources.powerReservePercent < 20 
-                    ? 'bg-amber-950/40 border-amber-500/50 text-amber-400' 
-                    : 'bg-space-900/60 border-slate-800 text-slate-300')
+                    ? 'bg-amber-500/10 border-amber-500/25 text-amber-300' 
+                    : 'bg-white/[0.04] border-white/10 text-slate-300')
             }`}>
-              <Zap className={`w-3.5 h-3.5 ${resources.isPowerDeficit ? 'text-red-400' : 'text-yellow-400'}`} />
+              <Zap className={`w-3.5 h-3.5 ${resources.isPowerDeficit ? 'text-rose-400' : 'text-amber-400'}`} />
               <div className="flex flex-col">
-                <span className="text-[9px] text-slate-400 leading-none">POWER</span>
-                <span className="telemetry-val text-[11px] font-bold font-mono">
+                <span className="text-[9px] text-[#86868b] leading-none mb-0.5">Power</span>
+                <span className="telemetry-val text-[11px] font-medium">
                   {(resources.powerGenerated / 1000).toFixed(1)} kW <span className="text-slate-500 font-normal">/ {(resources.powerRequired / 1000).toFixed(1)} kW</span>
                 </span>
               </div>
@@ -189,11 +200,11 @@ export const TopBar: React.FC = () => {
 
           {/* FUEL / DELTA-V */}
           <Tooltip glossaryKey="delta-v">
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-slate-800 bg-space-900/60 text-xs font-mono text-slate-300">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/[0.04] text-xs font-sans text-slate-300">
               <Fuel className="w-3.5 h-3.5 text-orange-400" />
               <div className="flex flex-col">
-                <span className="text-[9px] text-slate-400 leading-none">DELTA-V</span>
-                <span className="telemetry-val text-[11px] font-bold font-mono">
+                <span className="text-[9px] text-[#86868b] leading-none mb-0.5">Delta-V</span>
+                <span className="telemetry-val text-[11px] font-medium">
                   {resources.fuelPercent}% <span className="text-slate-500 font-normal">({resources.deltaVAvailable} m/s)</span>
                 </span>
               </div>
@@ -201,11 +212,11 @@ export const TopBar: React.FC = () => {
           </Tooltip>
 
           {/* SCIENCE */}
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-slate-800 bg-space-900/60 text-xs font-mono text-slate-300">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/[0.04] text-xs font-sans text-slate-300">
             <Award className="w-3.5 h-3.5 text-purple-400" />
             <div className="flex flex-col">
-              <span className="text-[9px] text-slate-400 leading-none">SCIENCE</span>
-              <span className="telemetry-val text-[11px] font-bold font-mono text-purple-300">
+              <span className="text-[9px] text-[#86868b] leading-none mb-0.5">Science</span>
+              <span className="telemetry-val text-[11px] font-medium text-purple-300">
                 +{resources.totalScience} <span className="text-slate-500 font-normal">pts</span>
               </span>
             </div>
@@ -213,11 +224,11 @@ export const TopBar: React.FC = () => {
 
           {/* RELIABILITY */}
           <Tooltip glossaryKey="reliability">
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-slate-800 bg-space-900/60 text-xs font-mono text-slate-300">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/[0.04] text-xs font-sans text-slate-300">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               <div className="flex flex-col">
-                <span className="text-[9px] text-slate-400 leading-none">RELIABILITY</span>
-                <span className="telemetry-val text-[11px] font-bold font-mono">
+                <span className="text-[9px] text-[#86868b] leading-none mb-0.5">Reliability</span>
+                <span className="telemetry-val text-[11px] font-medium">
                   {resources.overallReliability}%
                 </span>
               </div>
@@ -225,58 +236,58 @@ export const TopBar: React.FC = () => {
           </Tooltip>
         </div>
 
-        {/* Right: Quick Actions (Cadet Mode toggle, Demo Mission, Help, Reset) */}
+        {/* Right: Quick Actions (Apple Pills) */}
         <div className="flex items-center gap-2">
           {/* Cadet Mode Toggle Button */}
           <button
             onClick={toggleCadetMode}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-mono font-bold transition-all shadow-sm ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
               cadetMode
-                ? 'bg-gradient-to-r from-nasa-orange/20 to-amber-500/20 border-nasa-orange/60 text-nasa-orange'
-                : 'bg-space-900 border-slate-700 text-slate-400 hover:text-slate-200'
+                ? 'bg-blue-500/15 border-blue-500/30 text-blue-400'
+                : 'bg-white/[0.06] border-white/10 text-slate-300 hover:text-white hover:bg-white/[0.12]'
             }`}
             title="Toggle Kid-Friendly Cadet Mode with step-by-step tips"
           >
             <span>👨‍🚀</span>
-            <span className="hidden sm:inline">{cadetMode ? 'CADET GUIDE ON' : 'CADET GUIDE'}</span>
+            <span className="hidden sm:inline">{cadetMode ? 'Cadet Mode On' : 'Cadet Mode'}</span>
           </button>
 
           {/* How It Works Button */}
           <button
             onClick={() => setShowEduModal(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-700/80 hover:bg-slate-800 text-slate-300 text-xs font-mono transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 text-xs font-medium transition-colors"
             title="How It Works"
           >
-            <HelpCircle className="w-3.5 h-3.5 text-nasa-cyan" />
-            <span className="hidden sm:inline">GUIDE</span>
+            <HelpCircle className="w-3.5 h-3.5 text-blue-400" />
+            <span className="hidden sm:inline">Guide</span>
           </button>
 
           {/* Demo Mission Button */}
           <button
             onClick={loadDemoMission}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-nasa-orange/20 hover:bg-nasa-orange/30 border border-nasa-orange/50 text-nasa-orange hover:text-white text-xs font-mono font-semibold transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium transition-all shadow-sm shadow-blue-500/25"
             title="Instantly load preconfigured Lunar Polar Explorer mission"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">DEMO MISSION</span>
+            <span className="hidden sm:inline">Demo Mission</span>
           </button>
 
           {/* Sound Toggle Button */}
           <button
             onClick={toggleAudio}
-            className="p-1.5 rounded-lg border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+            className="p-2 rounded-full border border-white/10 bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 transition-colors"
             title={soundEnabled ? 'Mute sound effects' : 'Enable sound effects'}
           >
-            {soundEnabled ? <Volume2 className="w-4 h-4 text-emerald-400" /> : <VolumeX className="w-4 h-4 text-slate-500" />}
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> : <VolumeX className="w-3.5 h-3.5 text-slate-400" />}
           </button>
 
           {/* Reset Button */}
           <button
             onClick={() => setShowResetModal(true)}
-            className="p-1.5 rounded-lg border border-slate-800 hover:bg-red-950/40 hover:border-red-600/40 text-slate-400 hover:text-red-400 transition-colors"
+            className="p-2 rounded-full border border-white/10 bg-white/[0.06] hover:bg-rose-500/20 hover:border-rose-500/30 text-slate-300 hover:text-rose-400 transition-colors"
             title="Reset Mission"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-3.5 h-3.5" />
           </button>
         </div>
       </header>
@@ -284,10 +295,10 @@ export const TopBar: React.FC = () => {
       {/* Confirmation & Guide Modals */}
       <ConfirmationModal
         isOpen={showResetModal}
-        title="RESET CURRENT MISSION?"
+        title="Reset current mission?"
         message="This will clear all selected spacecraft components, launch vehicles, trajectory plans, and reset the simulation to default. Are you sure you want to proceed?"
-        confirmLabel="YES, RESET MISSION"
-        cancelLabel="CANCEL"
+        confirmLabel="Reset Mission"
+        cancelLabel="Cancel"
         onConfirm={() => {
           resetMission();
           setShowResetModal(false);

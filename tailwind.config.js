@@ -7,28 +7,58 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"SF Pro Text"',
+          '"SF Pro Display"',
+          'Inter',
+          'system-ui',
+          'sans-serif',
+        ],
+        display: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"SF Pro Display"',
+          '"SF Pro Text"',
+          'Inter',
+          'system-ui',
+          'sans-serif',
+        ],
+        mono: [
+          '"SF Mono"',
+          'ui-monospace',
+          'Menlo',
+          'Monaco',
+          'Consolas',
+          '"JetBrains Mono"',
+          'monospace',
+        ],
+      },
       colors: {
         space: {
-          950: '#040711',
-          900: '#070b18',
-          850: '#0b1226',
-          800: '#101a38',
-          700: '#182650',
-          600: '#22366f',
+          950: '#06070a',
+          900: '#0c0d12',
+          850: '#12131a',
+          800: '#181a24',
+          700: '#222533',
+          600: '#2d3144',
+        },
+        apple: {
+          blue: '#0071e3',
+          hover: '#0077ed',
+          gray: '#86868b',
+          dark: '#1d1d1f',
         },
         nasa: {
           orange: '#ff5c00',
           red: '#dc2626',
           amber: '#f59e0b',
-          blue: '#0284c7',
+          blue: '#0071e3',
           cyan: '#00e5ff',
           neon: '#0df',
         }
-      },
-      fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', '"Space Mono"', 'monospace'],
-        display: ['"Space Grotesk"', 'Inter', 'sans-serif'],
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',

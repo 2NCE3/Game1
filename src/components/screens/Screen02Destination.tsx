@@ -18,6 +18,7 @@ import { useMission } from '../../context/MissionContext';
 import { SpaceCanvas } from '../3d/SpaceCanvas';
 import { SolarSystemScene } from '../3d/SolarSystemScene';
 import { CadetGuideBanner } from '../common/CadetGuideBanner';
+import { SatellitesTrackerHUD } from '../common/SatellitesTrackerHUD';
 import { sounds } from '../../utils/soundEffects';
 
 export const Screen02Destination: React.FC = () => {
@@ -44,26 +45,30 @@ export const Screen02Destination: React.FC = () => {
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden bg-space-950">
-      {/* Sleek Game Header */}
-      <div className="h-12 bg-space-950/90 border-b border-slate-800/80 px-4 sm:px-6 flex items-center justify-between z-20 backdrop-blur-md">
+      {/* Sleek Apple Header */}
+      <div className="h-14 bg-black/40 border-b border-white/10 px-4 sm:px-6 flex items-center justify-between z-20 backdrop-blur-2xl">
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
               sounds.playClick();
               setStep('start');
             }}
-            className="px-2.5 py-1 rounded-lg border border-slate-700/80 hover:bg-slate-800 text-slate-300 font-mono text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-3 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-slate-200 text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer"
             title="Return to Main Menu"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
-            <span>MAIN MENU</span>
+            <span>Main Menu</span>
           </button>
 
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-nasa-orange animate-pulse" />
-            <span className="font-mono text-xs font-bold text-white tracking-widest uppercase">
-              MISSION TARGET // 3D SOLAR SYSTEM
+            <span className="w-2 h-2 rounded-full bg-[#0071e3]" />
+            <span className="text-xs font-semibold text-white tracking-tight">
+              Mission Target · 3D Solar System
             </span>
+          </div>
+
+          <div className="hidden sm:block">
+            <SatellitesTrackerHUD onSelectDestination={handleDestinationClick} />
           </div>
         </div>
 
@@ -72,16 +77,21 @@ export const Screen02Destination: React.FC = () => {
             sounds.playSelect();
             setStep('hangar');
           }}
-          className="px-5 py-1.5 rounded-xl bg-gradient-to-r from-nasa-orange to-amber-500 hover:from-orange-500 hover:to-amber-400 text-black font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-lg shadow-nasa-orange/20 flex items-center gap-1.5 cursor-pointer"
+          className="px-5 py-2 rounded-full bg-[#0071e3] hover:bg-[#0077ed] text-white font-semibold text-xs tracking-tight transition-all shadow-md shadow-[#0071e3]/20 flex items-center gap-1.5 cursor-pointer active:scale-[0.98]"
         >
-          <span>ENTER HANGAR ({selectedDest.name.toUpperCase()})</span>
-          <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
+          <span>Enter Hangar ({selectedDest.name})</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         {/* Left/Center: Interactive 3D Solar System View */}
-        <div className="flex-1 h-[50vh] lg:h-full relative bg-space-950">
+        <div className="flex-1 h-[42vh] sm:h-[48vh] lg:h-full relative bg-space-950 shrink-0">
+          {/* Top-Left Fleet Status on Mobile */}
+          <div className="absolute top-3 left-3 z-10 sm:hidden">
+            <SatellitesTrackerHUD onSelectDestination={handleDestinationClick} />
+          </div>
+
           <SpaceCanvas cameraPosition={[0, 18, 22]} fov={50}>
             <SolarSystemScene 
               selectedDestinationId={selectedDest.id} 
@@ -90,113 +100,114 @@ export const Screen02Destination: React.FC = () => {
           </SpaceCanvas>
 
           {/* Quick selector buttons at bottom of viewport */}
-          <div className="absolute bottom-4 left-4 right-4 z-10 flex items-center justify-center gap-2 overflow-x-auto pb-1 pointer-events-auto">
-            {DESTINATIONS.map((dest) => (
-              <button
-                key={dest.id}
-                onClick={() => handleDestinationClick(dest.id)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold transition-all border whitespace-nowrap flex items-center gap-2 ${
-                  selectedDest.id === dest.id
-                    ? 'bg-space-900 border-nasa-cyan text-white shadow-lg shadow-nasa-cyan/25 ring-2 ring-nasa-cyan'
-                    : 'bg-space-950/85 border-slate-800 text-slate-300 hover:text-white hover:bg-space-900'
-                }`}
-              >
-                <span className="text-sm">{getCadetEmoji(dest.id)}</span>
-                <span>{dest.name}</span>
-                {selectedDest.id === dest.id && <span className="text-nasa-cyan">✓</span>}
-              </button>
-            ))}
+          <div className="absolute bottom-3 sm:bottom-5 left-2 right-2 sm:left-4 sm:right-4 z-10 flex items-center justify-start sm:justify-center overflow-x-auto pb-1 pointer-events-auto scrollbar-none px-2">
+            <div className="flex items-center gap-1.5 p-1 rounded-full bg-black/70 backdrop-blur-2xl border border-white/15 shadow-2xl shrink-0">
+              {DESTINATIONS.map((dest) => (
+                <button
+                  key={dest.id}
+                  onClick={() => handleDestinationClick(dest.id)}
+                  className={`px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                    selectedDest.id === dest.id
+                      ? 'bg-white text-black font-semibold shadow-sm'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <span className="text-sm">{getCadetEmoji(dest.id)}</span>
+                  <span>{dest.name}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Right: Side Telemetry & Environmental Profile Panel */}
-        <div className="w-full lg:w-[400px] bg-space-900/90 border-t lg:border-t-0 lg:border-l border-slate-800/80 p-6 flex flex-col justify-between overflow-y-auto z-20 backdrop-blur-md">
+        <div className="w-full lg:w-[380px] bg-black/50 border-t lg:border-t-0 lg:border-l border-white/10 p-4 sm:p-6 flex flex-col justify-between overflow-y-auto z-20 backdrop-blur-2xl font-sans">
           <div>
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-mono text-nasa-cyan uppercase tracking-widest font-bold">
-                {cadetMode ? 'TARGET WORLD FACTS' : 'TARGET SPECIFICATIONS'}
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                {cadetMode ? 'Target World Facts' : 'Target Specifications'}
               </span>
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase border ${
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium uppercase border ${
                 selectedDest.difficulty === 'EXTREME'
-                  ? 'bg-red-950/60 border-red-600/50 text-red-400'
+                  ? 'bg-red-500/10 border-red-500/25 text-red-400'
                   : selectedDest.difficulty === 'HARD'
-                    ? 'bg-amber-950/60 border-amber-600/50 text-amber-400'
-                    : 'bg-emerald-950/60 border-emerald-600/50 text-emerald-400'
+                    ? 'bg-amber-500/10 border-amber-500/25 text-amber-400'
+                    : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400'
               }`}>
-                {selectedDest.difficulty} DIFFICULTY
+                {selectedDest.difficulty} Difficulty
               </span>
             </div>
 
             <div className="flex items-center gap-3.5 mb-4">
               <div 
-                className="w-12 h-12 rounded-2xl shadow-lg flex items-center justify-center text-2xl border border-white/20"
+                className="w-12 h-12 rounded-2xl shadow-lg flex items-center justify-center text-2xl border border-white/15"
                 style={{ backgroundColor: selectedDest.color }}
               >
                 {getCadetEmoji(selectedDest.id)}
               </div>
               <div>
-                <h3 className="font-display font-black text-2xl text-white">
+                <h3 className="font-display font-bold text-2xl text-white tracking-tight">
                   {selectedDest.name}
                 </h3>
-                <span className="text-xs font-mono text-nasa-cyan font-semibold">
+                <span className="text-xs text-sky-400 font-medium">
                   {selectedDest.type}
                 </span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed mb-6">
+            <p className="text-xs text-slate-300 leading-relaxed mb-6 font-normal">
               {selectedDest.description}
             </p>
 
             {/* Environmental Metrics Table */}
-            <div className="space-y-3 font-mono text-xs">
-              <div className="p-3 bg-space-950/70 border border-slate-800 rounded-xl flex items-center justify-between">
+            <div className="space-y-2.5 text-xs">
+              <div className="p-3 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-between">
                 <span className="text-slate-400 flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-nasa-cyan" />
-                  {cadetMode ? 'Distance from Earth' : 'DISTANCE'}
+                  <MapPin className="w-4 h-4 text-sky-400" />
+                  {cadetMode ? 'Distance from Earth' : 'Distance'}
                 </span>
-                <span className="text-white font-bold telemetry-val">
+                <span className="text-white font-medium">
                   {selectedDest.distance}
                 </span>
               </div>
 
-              <div className="p-3 bg-space-950/70 border border-slate-800 rounded-xl flex items-center justify-between">
+              <div className="p-3 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-between">
                 <span className="text-slate-400 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-amber-400" />
-                  {cadetMode ? 'Trip Duration' : 'TRANSIT TIME'}
+                  {cadetMode ? 'Trip Duration' : 'Transit Time'}
                 </span>
-                <span className="text-amber-300 font-bold telemetry-val">
+                <span className="text-amber-300 font-medium">
                   {selectedDest.travelTime}
                 </span>
               </div>
 
-              <div className="p-3 bg-space-950/70 border border-slate-800 rounded-xl flex items-center justify-between">
+              <div className="p-3 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-between">
                 <span className="text-slate-400 flex items-center gap-2">
                   <Globe2 className="w-4 h-4 text-purple-400" />
-                  {cadetMode ? 'Gravity Pull' : 'SURFACE GRAVITY'}
+                  {cadetMode ? 'Gravity Pull' : 'Surface Gravity'}
                 </span>
-                <span className="text-purple-300 font-bold telemetry-val">
+                <span className="text-purple-300 font-medium">
                   {selectedDest.gravity}
                 </span>
               </div>
 
-              <div className="p-3 bg-space-950/70 border border-slate-800 rounded-xl flex items-center justify-between">
+              <div className="p-3 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-between">
                 <span className="text-slate-400 flex items-center gap-2">
                   <Radio className="w-4 h-4 text-blue-400" />
-                  {cadetMode ? 'Radio Call Delay' : 'COMMS LATENCY'}
+                  {cadetMode ? 'Radio Call Delay' : 'Comms Latency'}
                 </span>
-                <span className="text-blue-300 font-bold telemetry-val">
+                <span className="text-blue-300 font-medium">
                   {selectedDest.commDelay}
                 </span>
               </div>
 
-              <div className="p-3 bg-space-950/70 border border-slate-800 rounded-xl flex items-center justify-between">
+              <div className="p-3 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-between">
                 <span className="text-slate-400 flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-red-400" />
-                  {cadetMode ? 'Radiation Hazard' : 'RADIATION LEVEL'}
+                  {cadetMode ? 'Radiation Hazard' : 'Radiation Level'}
                 </span>
-                <span className={`font-bold ${
-                  selectedDest.radiation === 'EXTREME' ? 'text-red-400 glow-red' : (selectedDest.radiation === 'HIGH' ? 'text-amber-400' : 'text-emerald-400')
+                <span className={`font-semibold ${
+                  selectedDest.radiation === 'EXTREME' ? 'text-red-400' : (selectedDest.radiation === 'HIGH' ? 'text-amber-400' : 'text-emerald-400')
                 }`}>
                   {selectedDest.radiation}
                 </span>
@@ -205,29 +216,30 @@ export const Screen02Destination: React.FC = () => {
           </div>
 
           {/* Child-Friendly Flight Tip */}
-          <div className="mt-4 p-3 rounded-2xl bg-cyan-950/30 border border-cyan-800/40 text-xs text-cyan-200 flex items-start gap-2">
+          <div className="mt-4 p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 text-xs text-slate-300 flex items-start gap-2.5">
             <span className="text-base">🤖</span>
-            <div className="leading-snug">
-              <span className="font-bold text-white">Nova's Advice: </span>
-              {selectedDest.id === 'new-eden' && 'Humanity\'s promised haven! Liquid oceans, green lowlands, and breathable air. Make sure you pack the Colony Seed Vault, high radiation shields, and retro-thrusters for landing!'}
-              {selectedDest.id === 'moon' && 'The Moon is right next door (3 days trip)! Perfect for testing your first rocket design with solar power.'}
-              {selectedDest.id === 'mars' && 'The Red Planet has thin air! You will need a strong radio dish and good solar arrays for the 7-month cruise.'}
-              {selectedDest.id === 'jupiter' && 'Jupiter is deep in the cold outer space! Solar panels won’t get enough sunlight — choose a Nuclear RTG!'}
-              {selectedDest.id === 'asteroid' && 'Asteroids have almost zero gravity! You will need precise thrusters to rendezvous and sample rocks.'}
-              {selectedDest.id === 'earth-orbit' && 'Low Earth Orbit is our home backyard! Easy communication and fast data relay.'}
+            <div className="leading-relaxed">
+              <span className="font-semibold text-white">Nova's Guidance: </span>
+              {selectedDest.id === 'new-eden' && 'Humanity\'s promised haven! Liquid oceans, green lowlands, and breathable air. Make sure you pack the Colony Seed Vault, high radiation shields, and retro-thrusters for landing.'}
+              {selectedDest.id === 'moon' && 'The Moon is right next door (3 days trip). Perfect for testing your first rocket design with solar power.'}
+              {selectedDest.id === 'mars' && 'The Red Planet has thin air. You will need a strong radio dish and good solar arrays for the 7-month cruise.'}
+              {selectedDest.id === 'jupiter' && 'Jupiter is deep in cold outer space. Solar panels won’t get enough sunlight — choose a Nuclear RTG.'}
+              {selectedDest.id === 'asteroid' && 'Asteroids have almost zero gravity. You will need precise thrusters to rendezvous and sample rocks.'}
+              {selectedDest.id === 'earth-orbit' && 'Low Earth Orbit is our home backyard — fast communication and direct ground station coverage.'}
             </div>
           </div>
 
           {/* Action Button */}
-          <div className="mt-4 pt-3 border-t border-slate-800">
+          <div className="mt-5 pt-3 border-t border-white/10">
             <button
               onClick={() => {
                 sounds.playSuccess();
                 setStep('hangar');
               }}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-nasa-orange via-amber-500 to-red-500 hover:from-orange-500 hover:to-red-400 text-black font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-lg shadow-nasa-orange/25 flex items-center justify-center gap-2 cursor-pointer ring-2 ring-yellow-400"
+              className="w-full py-3 rounded-full bg-[#0071e3] hover:bg-[#0077ed] text-white font-semibold text-xs tracking-tight transition-all shadow-md shadow-[#0071e3]/20 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
             >
-              <span>LOCK DESTINATION & ENTER HANGAR 🚀</span>
+              <span>Confirm Destination & Enter Hangar</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

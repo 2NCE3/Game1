@@ -283,18 +283,22 @@ export const AISideBot: React.FC = () => {
 
   return (
     <>
-      {/* ─── FLOATING BOT COMPANION (COLLAPSED PILL ON BOTTOM-LEFT) ─────────────── */}
-      <div className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-40 select-none">
+      {/* ─── FLOATING BOT COMPANION (COMPACT CIRCLE BUBBLE ON LEFT SIDE) ─────────────── */}
+      <div className={`fixed z-40 select-none print:hidden ${
+        state.currentStep === 'hangar' 
+          ? 'bottom-24 left-3 sm:bottom-28 sm:left-[88px]' 
+          : 'bottom-24 left-4 sm:bottom-28 sm:left-6'
+      }`}>
         <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
           className="relative"
         >
-          {/* Animated notification glow */}
+          {/* Animated notification ping */}
           {hasNewTip && !isOpen && (
-            <span className="absolute -top-1 -right-1 flex h-4 w-4">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-nasa-orange opacity-75" />
-              <span className="relative inline-flex rounded-full h-4 w-4 bg-nasa-orange text-[9px] font-bold text-white items-center justify-center">
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 z-10">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-red-600 border border-white/20 text-[9px] font-bold text-white items-center justify-center shadow-sm">
                 !
               </span>
             </span>
@@ -306,36 +310,31 @@ export const AISideBot: React.FC = () => {
               setIsOpen(prev => !prev);
               setHasNewTip(false);
             }}
-            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-space-900/95 border-2 border-nasa-cyan/60 hover:border-nasa-cyan text-white shadow-2xl backdrop-blur-xl ring-4 ring-nasa-cyan/20 cursor-pointer group transition-all"
+            className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-[#070913]/90 hover:bg-[#0c1222] border-2 border-red-500/40 hover:border-red-500 text-white shadow-xl shadow-red-950/40 backdrop-blur-xl flex items-center justify-center cursor-pointer group transition-all duration-200 ring-2 ring-red-500/20 hover:ring-red-500/40"
             title="Open NOVA-9 AI Assistant"
+            aria-label="Open NOVA-9 AI Assistant"
           >
-            {/* Cute Animated Bot Face */}
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-lg shadow-md group-hover:rotate-12 transition-transform">
+            {/* Cute Animated Bot Face in Circular Bubble */}
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 via-rose-600 to-cyan-500 flex items-center justify-center text-base shadow-sm group-hover:scale-110 transition-transform">
               🤖
-            </div>
-
-            <div className="text-left hidden sm:block">
-              <div className="text-[10px] font-mono font-bold text-nasa-cyan uppercase tracking-wider flex items-center gap-1">
-                <span>NOVA-9 AI</span>
-                <Sparkles className="w-2.5 h-2.5 text-yellow-300" />
-              </div>
-              <div className="text-[11px] font-bold text-white truncate max-w-[130px]">
-                {primarySuggestion ? primarySuggestion.title : 'Mission Assistant'}
-              </div>
             </div>
           </button>
         </motion.div>
       </div>
 
-      {/* ─── EXPANDED BOT CHAT & ASSISTANT MODAL (BOTTOM-LEFT ANCHORED) ─── */}
+      {/* ─── EXPANDED BOT CHAT & ASSISTANT MODAL (ANCHORED SAFELY ABOVE BUBBLE) ─── */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.92 }}
+            initial={{ opacity: 0, y: 20, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30, scale: 0.92 }}
+            exit={{ opacity: 0, y: 20, scale: 0.94 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed bottom-20 left-4 sm:bottom-24 sm:left-6 z-50 w-[350px] sm:w-[400px] max-h-[520px] bg-space-950/95 border-2 border-nasa-cyan/50 rounded-3xl shadow-2xl backdrop-blur-2xl flex flex-col overflow-hidden ring-4 ring-nasa-cyan/15 select-none"
+            className={`fixed z-50 w-[calc(100vw-24px)] sm:w-[380px] max-w-[390px] max-h-[calc(100vh-160px)] sm:max-h-[500px] bg-[#070913]/98 border border-red-500/30 rounded-3xl shadow-2xl backdrop-blur-2xl flex flex-col overflow-hidden ring-4 ring-red-500/10 select-none print:hidden ${
+              state.currentStep === 'hangar'
+                ? 'bottom-40 left-3 sm:bottom-44 sm:left-[88px]'
+                : 'bottom-40 left-4 sm:bottom-44 sm:left-6'
+            }`}
           >
             {/* Bot Header */}
             <div className="p-4 bg-gradient-to-r from-space-900 via-cyan-950/40 to-space-900 border-b border-slate-800 flex items-center justify-between">

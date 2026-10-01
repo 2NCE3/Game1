@@ -247,6 +247,9 @@ export interface MissionState {
   
   // Cadet Mode for children and easy guidance
   cadetMode: boolean;
+
+  // Demo Mode flag: preloads all 8 subsystems only when demo mode is active
+  isDemoMode?: boolean;
   
   // Final evaluation cache
   lastResult: MissionResultReport | null;

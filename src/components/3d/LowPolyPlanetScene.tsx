@@ -507,47 +507,104 @@ export const LowPolyPlanetScene: React.FC<LowPolyPlanetSceneProps> = ({
 
       {/* ─── 2. THE PLAYER'S ROCKET & FLIGHT STAGES ─────────────────── */}
       <group ref={rocketGroupRef} position={[0, ORIGIN_RADIUS + 2.4, 0]}>
+        {/* Core Stage 1 Rocket Body */}
         <mesh position={[0, 1.6, 0]} castShadow={!lowQuality}>
-          <cylinderGeometry args={[0.55, 0.65, 3.8, 8]} />
-          <meshStandardMaterial color="#f8fafc" metalness={0.2} roughness={0.4} flatShading />
+          <cylinderGeometry args={[0.52, 0.55, 3.8, 16]} />
+          <meshStandardMaterial color="#f8fafc" metalness={0.25} roughness={0.35} flatShading />
         </mesh>
 
-        <mesh position={[0, 2.4, 0]}>
-          <cylinderGeometry args={[0.56, 0.56, 0.35, 8]} />
+        {/* Technical Livery Stripes */}
+        <mesh position={[0, 2.6, 0]}>
+          <cylinderGeometry args={[0.525, 0.525, 0.25, 16]} />
           <meshStandardMaterial color="#ff5c00" flatShading />
         </mesh>
+        <mesh position={[0, 0.2, 0]}>
+          <cylinderGeometry args={[0.555, 0.555, 0.15, 16]} />
+          <meshStandardMaterial color="#0f172a" metalness={0.8} flatShading />
+        </mesh>
+
+        {/* Vertical Avionics Raceway Conduit */}
+        <mesh position={[0.53, 1.6, 0]}>
+          <boxGeometry args={[0.04, 3.6, 0.06]} />
+          <meshStandardMaterial color="#0f172a" metalness={0.7} flatShading />
+        </mesh>
+
+        {/* 4 Aerodynamic Base Delta Fins */}
+        {[0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2].map((angle, idx) => (
+          <group key={`fin-${idx}`} rotation={[0, angle, 0]} position={[0, 0.1, 0]}>
+            <mesh position={[0.68, 0, 0]} rotation={[0, 0, -0.3]}>
+              <boxGeometry args={[0.4, 0.65, 0.04]} />
+              <meshStandardMaterial color="#f1f5f9" metalness={0.3} roughness={0.3} flatShading />
+            </mesh>
+          </group>
+        ))}
+
+        {/* 4 Titanium Grid Fins at Upper Stage */}
+        {[0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2].map((angle, idx) => (
+          <group key={`grid-${idx}`} rotation={[0, angle, 0]} position={[0, 2.8, 0]}>
+            <mesh position={[0.58, 0, 0]} rotation={[0, 0, -0.1]}>
+              <boxGeometry args={[0.16, 0.2, 0.03]} />
+              <meshStandardMaterial color="#334155" metalness={0.9} roughness={0.2} wireframe />
+            </mesh>
+          </group>
+        ))}
+
+        {/* Engine Bell Nozzle Cluster */}
+        <group position={[0, -0.4, 0]}>
+          <mesh position={[0, 0, 0]} rotation={[Math.PI, 0, 0]}>
+            <cylinderGeometry args={[0.18, 0.08, 0.4, 16, 1, true]} />
+            <meshStandardMaterial color="#334155" metalness={0.95} roughness={0.2} side={THREE.DoubleSide} flatShading />
+          </mesh>
+          <mesh position={[0, 0.08, 0]}>
+            <sphereGeometry args={[0.08, 12, 12]} />
+            <meshBasicMaterial color="#ffedd5" />
+          </mesh>
+        </group>
 
         {/* Boosters */}
         <group ref={boosterLeftRef} position={[-0.8, 1.2, 0]}>
           <mesh>
-            <cylinderGeometry args={[0.25, 0.28, 3.0, 6]} />
-            <meshStandardMaterial color="#e2e8f0" flatShading />
+            <cylinderGeometry args={[0.25, 0.28, 3.0, 12]} />
+            <meshStandardMaterial color="#e2e8f0" metalness={0.25} roughness={0.35} flatShading />
           </mesh>
-          <mesh position={[0, 1.7, 0]}>
-            <coneGeometry args={[0.26, 0.5, 6]} />
-            <meshStandardMaterial color="#f97316" flatShading />
+          <mesh position={[0, 1.75, 0]}>
+            <coneGeometry args={[0.26, 0.6, 12]} />
+            <meshStandardMaterial color="#ff5c00" flatShading />
+          </mesh>
+          <mesh position={[0, -1.6, 0]} rotation={[Math.PI, 0, 0]}>
+            <cylinderGeometry args={[0.12, 0.06, 0.3, 12, 1, true]} />
+            <meshStandardMaterial color="#334155" metalness={0.9} side={THREE.DoubleSide} />
           </mesh>
         </group>
         <group ref={boosterRightRef} position={[0.8, 1.2, 0]}>
           <mesh>
-            <cylinderGeometry args={[0.25, 0.28, 3.0, 6]} />
-            <meshStandardMaterial color="#e2e8f0" flatShading />
+            <cylinderGeometry args={[0.25, 0.28, 3.0, 12]} />
+            <meshStandardMaterial color="#e2e8f0" metalness={0.25} roughness={0.35} flatShading />
           </mesh>
-          <mesh position={[0, 1.7, 0]}>
-            <coneGeometry args={[0.26, 0.5, 6]} />
-            <meshStandardMaterial color="#f97316" flatShading />
+          <mesh position={[0, 1.75, 0]}>
+            <coneGeometry args={[0.26, 0.6, 12]} />
+            <meshStandardMaterial color="#ff5c00" flatShading />
+          </mesh>
+          <mesh position={[0, -1.6, 0]} rotation={[Math.PI, 0, 0]}>
+            <cylinderGeometry args={[0.12, 0.06, 0.3, 12, 1, true]} />
+            <meshStandardMaterial color="#334155" metalness={0.9} side={THREE.DoubleSide} />
           </mesh>
         </group>
 
-        {/* Fairing Halves */}
+        {/* Fairing Halves (Closed Seamless Nosecone) */}
         <group position={[0, 4.2, 0]}>
-          <mesh ref={fairingLeftRef} position={[-0.25, 0, 0]}>
-            <coneGeometry args={[0.6, 1.6, 8, 1, false, 0, Math.PI]} />
-            <meshStandardMaterial color="#f8fafc" flatShading />
+          <mesh ref={fairingLeftRef} position={[0, 0, 0]}>
+            <coneGeometry args={[0.55, 1.6, 16, 1, false, 0, Math.PI]} />
+            <meshStandardMaterial color="#f8fafc" metalness={0.25} roughness={0.3} flatShading />
           </mesh>
-          <mesh ref={fairingRightRef} position={[0.25, 0, 0]}>
-            <coneGeometry args={[0.6, 1.6, 8, 1, false, Math.PI, Math.PI]} />
-            <meshStandardMaterial color="#f8fafc" flatShading />
+          <mesh ref={fairingRightRef} position={[0, 0, 0]}>
+            <coneGeometry args={[0.55, 1.6, 16, 1, false, Math.PI, Math.PI]} />
+            <meshStandardMaterial color="#f8fafc" metalness={0.25} roughness={0.3} flatShading />
+          </mesh>
+          {/* Nosecone tip cap */}
+          <mesh position={[0, 0.7, 0]}>
+            <coneGeometry args={[0.14, 0.3, 16]} />
+            <meshStandardMaterial color="#0f172a" metalness={0.8} />
           </mesh>
         </group>
 

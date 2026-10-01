@@ -30,6 +30,7 @@ import { LaunchMinigame } from '../game/LaunchMinigame';
 import { CockpitView3D } from '../game/CockpitView3D';
 import { PlanetLanderGame } from '../game/PlanetLanderGame';
 import { LowPolyWorldGame } from '../game/LowPolyWorldGame';
+import { NasaFlightDeckMonitors } from '../game/NasaFlightDeckMonitors';
 import { ErrorBoundary } from '../common/ErrorBoundary';
 
 export const Screen09Simulation: React.FC = () => {
@@ -44,12 +45,32 @@ export const Screen09Simulation: React.FC = () => {
     activeDecision,
     resolveDecision,
     cadetMode,
-    setStep
+    setStep,
+    completeMission
   } = useMission();
 
   const [activeView, setActiveView] = useState<'launch_pad' | 'lowpoly_world' | 'launch_minigame' | 'cockpit_3d' | 'planet_lander'>('launch_pad');
+  const [cameraMode, setCameraMode] = useState<'basic' | '3d'>('3d');
+  const [showNasaMonitors, setShowNasaMonitors] = useState<boolean>(true);
+  const [showDescentPrompt, setShowDescentPrompt] = useState(false);
+  const [descentInitiated, setDescentInitiated] = useState(false);
 
   const destination = DESTINATIONS.find(d => d.id === state.destinationId) || DESTINATIONS[0];
+
+  // Handle descent flow logic
+  useEffect(() => {
+    if (activeView !== 'launch_pad') return;
+
+    if (telemetry.distanceProgressPercent >= 82 && !descentInitiated && !showDescentPrompt) {
+      setSimSpeed(0);
+      setShowDescentPrompt(true);
+      sounds.playAlert();
+    }
+    
+    if (descentInitiated && telemetry.distanceProgressPercent >= 94) {
+      setActiveView('planet_lander');
+    }
+  }, [telemetry.distanceProgressPercent, descentInitiated, showDescentPrompt, activeView, setSimSpeed]);
 
   const timelineSteps = [
     { label: 'PAD LIFTOFF', at: 0, tag: '[01/07]' },
@@ -57,8 +78,8 @@ export const Screen09Simulation: React.FC = () => {
     { label: 'ORBIT INSERTION', at: 30, tag: '[03/07]' },
     { label: 'TRANS-INJECTION', at: 45, tag: '[04/07]' },
     { label: 'CRUISE & CORRECTION', at: 65, tag: '[05/07]' },
-    { label: 'DESTINATION ARRIVAL', at: 85, tag: '[06/07]' },
-    { label: 'SCIENCE RETURN', at: 100, tag: '[07/07]' },
+    { label: 'DESTINATION ORBIT', at: 75, tag: '[06/07]' },
+    { label: 'LANDING & TOUCHDOWN', at: 98, tag: '[07/07]' },
   ];
 
   // Play sound when active decision pops up
@@ -94,78 +115,17 @@ export const Screen09Simulation: React.FC = () => {
 
   if (activeView === 'lowpoly_world') {
     return (
-      <div className="relative w-full h-full flex flex-col bg-space-950">
-        {/* Navigation Switcher Header */}
-        <div className="h-10 bg-space-950/95 border-b border-slate-800/80 px-4 flex items-center justify-between text-xs font-mono z-30">
-          <div className="flex items-center gap-2">
-            <span className="text-nasa-cyan font-bold flex items-center gap-1.5">
-              <span className="text-[10px] px-1 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-300">[3D]</span>
-              <span>LOW-POLY PLANET ODYSSEY</span>
-            </span>
-            <span className="text-slate-400 hidden sm:inline">| Surface Base to Interplanetary Spaceflight ({destination.name})</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                sounds.playClick();
-                setActiveView('launch_pad');
-              }}
-              className="px-2.5 py-1 rounded-sm bg-blue-950/80 border border-blue-500/50 hover:bg-blue-900 text-blue-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
-            >
-              <Rocket className="w-3 h-3 text-blue-400" />
-              <span>LAUNCH PAD</span>
-            </button>
-            <button
-              onClick={() => {
-                sounds.playClick();
-                setActiveView('launch_minigame');
-              }}
-              className="px-2.5 py-1 rounded-sm bg-orange-950/80 border border-orange-500/50 hover:bg-orange-900 text-orange-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
-            >
-              <span>ASCENT PILOT</span>
-            </button>
-            <button
-              onClick={() => {
-                sounds.playClick();
-                setActiveView('cockpit_3d');
-              }}
-              className="px-2.5 py-1 rounded-sm bg-cyan-950/80 border border-cyan-500/50 hover:bg-cyan-900 text-cyan-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
-            >
-              <span>3D COCKPIT</span>
-            </button>
-            <button
-              onClick={() => {
-                sounds.playClick();
-                setActiveView('planet_lander');
-              }}
-              className="px-2.5 py-1 rounded-sm bg-emerald-950/80 border border-emerald-500/50 hover:bg-emerald-900 text-emerald-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
-            >
-              <span>LANDER</span>
-            </button>
-            <button
-              onClick={() => {
-                sounds.playClick();
-                abortSimulation();
-              }}
-              className="px-2.5 py-1 rounded-sm bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-300 text-[11px] flex items-center gap-1 transition-colors"
-            >
-              <Square className="w-3 h-3" />
-              <span>ABORT</span>
-            </button>
-          </div>
-        </div>
-        <div className="flex-1 overflow-hidden relative">
-          <LowPolyWorldGame
-            onSuccess={() => {
-              sounds.playSuccess();
-              setStep('results');
-            }}
-            onEnterLaunchPad={() => setActiveView('launch_pad')}
-            onEnterCockpit={() => setActiveView('cockpit_3d')}
-            onEnterLander={() => setActiveView('planet_lander')}
-            onReturnToHangar={() => abortSimulation()}
-          />
-        </div>
+      <div className="relative w-full h-full flex flex-col bg-space-950 overflow-hidden">
+        <LowPolyWorldGame
+          onSuccess={() => {
+            sounds.playSuccess();
+            completeMission();
+          }}
+          onEnterLaunchPad={() => setActiveView('launch_pad')}
+          onEnterCockpit={() => setActiveView('cockpit_3d')}
+          onEnterLander={() => setActiveView('planet_lander')}
+          onReturnToHangar={() => abortSimulation()}
+        />
       </div>
     );
   }
@@ -173,14 +133,12 @@ export const Screen09Simulation: React.FC = () => {
   if (activeView === 'launch_minigame') {
     return (
       <div className="relative w-full h-full flex flex-col bg-space-950">
-        {/* Quick View Switcher banner */}
         <div className="h-10 bg-space-950/95 border-b border-slate-800/80 px-4 flex items-center justify-between text-xs font-mono z-30">
           <div className="flex items-center gap-2">
             <span className="text-nasa-orange font-bold flex items-center gap-1.5">
               <Rocket className="w-3.5 h-3.5" />
-              <span>PHASE 1: ASCENT LAUNCH PILOT</span>
+              <span>ASCENT LAUNCH PILOT</span>
             </span>
-            <span className="text-slate-400 hidden sm:inline">| Hold [SPACE] to throttle, [A/D] to match gravity turn corridor</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -188,7 +146,7 @@ export const Screen09Simulation: React.FC = () => {
                 sounds.playClick();
                 setActiveView('launch_pad');
               }}
-              className="px-2.5 py-1 rounded-sm bg-blue-950/80 border border-blue-500/50 hover:bg-blue-900 text-blue-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
+              className="px-2.5 py-1 rounded-sm bg-blue-950/80 border border-blue-500/50 hover:bg-blue-900 text-blue-200 text-xs font-bold flex items-center gap-1 transition-colors"
             >
               <Rocket className="w-3 h-3 text-blue-400" />
               <span>LAUNCH PAD</span>
@@ -196,36 +154,9 @@ export const Screen09Simulation: React.FC = () => {
             <button
               onClick={() => {
                 sounds.playClick();
-                setActiveView('lowpoly_world');
-              }}
-              className="px-2.5 py-1 rounded-sm bg-purple-950/80 border border-purple-500/50 hover:bg-purple-900 text-purple-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
-            >
-              <span>3D PLANET WORLD</span>
-            </button>
-            <button
-              onClick={() => {
-                sounds.playClick();
-                setActiveView('cockpit_3d');
-              }}
-              className="px-2.5 py-1 rounded-sm bg-cyan-950/80 border border-cyan-500/50 hover:bg-cyan-900 text-cyan-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
-            >
-              <span>3D COCKPIT</span>
-            </button>
-            <button
-              onClick={() => {
-                sounds.playClick();
-                setActiveView('planet_lander');
-              }}
-              className="px-2.5 py-1 rounded-sm bg-emerald-950/80 border border-emerald-500/50 hover:bg-emerald-900 text-emerald-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
-            >
-              <span>LANDER</span>
-            </button>
-            <button
-              onClick={() => {
-                sounds.playClick();
                 abortSimulation();
               }}
-              className="px-2.5 py-1 rounded-sm bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-300 text-[11px] flex items-center gap-1 transition-colors"
+              className="px-2.5 py-1 rounded-sm bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-300 text-xs flex items-center gap-1 transition-colors"
             >
               <Square className="w-3 h-3" />
               <span>ABORT</span>
@@ -245,31 +176,19 @@ export const Screen09Simulation: React.FC = () => {
   if (activeView === 'cockpit_3d') {
     return (
       <div className="relative w-full h-full flex flex-col bg-space-950">
-        {/* Navigation Switcher Header */}
         <div className="h-10 bg-space-950/95 border-b border-slate-800/80 px-4 flex items-center justify-between text-xs font-mono z-30">
           <div className="flex items-center gap-2">
             <span className="text-nasa-cyan font-bold flex items-center gap-1.5">
-              <span className="text-[10px] px-1 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-300">[HUD]</span>
-              <span>PHASE 2: 3D FIRST-PERSON COCKPIT FLIGHT</span>
+              <span>3D COCKPIT FLIGHT</span>
             </span>
-            <span className="text-slate-400 hidden sm:inline">| Steer [A/D], Shields [W], Lasers [SPACE], Throttle slider</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
                 sounds.playClick();
-                setActiveView('lowpoly_world');
-              }}
-              className="px-2.5 py-1 rounded-sm bg-purple-950/80 border border-purple-500/50 hover:bg-purple-900 text-purple-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
-            >
-              <span>3D PLANET WORLD</span>
-            </button>
-            <button
-              onClick={() => {
-                sounds.playClick();
                 setActiveView('launch_pad');
               }}
-              className="px-2.5 py-1 rounded-sm bg-blue-950/80 border border-blue-500/50 hover:bg-blue-900 text-blue-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
+              className="px-2.5 py-1 rounded-sm bg-blue-950/80 border border-blue-500/50 hover:bg-blue-900 text-blue-200 text-xs font-bold flex items-center gap-1 transition-colors"
             >
               <Rocket className="w-3 h-3 text-blue-400" />
               <span>LAUNCH PAD</span>
@@ -277,27 +196,9 @@ export const Screen09Simulation: React.FC = () => {
             <button
               onClick={() => {
                 sounds.playClick();
-                setActiveView('launch_minigame');
-              }}
-              className="px-2.5 py-1 rounded-sm bg-space-900 border border-slate-700 hover:bg-slate-800 text-slate-300 text-[11px] flex items-center gap-1 transition-colors"
-            >
-              <span>ASCENT PILOT</span>
-            </button>
-            <button
-              onClick={() => {
-                sounds.playClick();
-                setActiveView('planet_lander');
-              }}
-              className="px-2.5 py-1 rounded-sm bg-emerald-950/80 border border-emerald-500/50 hover:bg-emerald-900 text-emerald-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
-            >
-              <span>LANDER</span>
-            </button>
-            <button
-              onClick={() => {
-                sounds.playClick();
                 abortSimulation();
               }}
-              className="px-2 py-1 rounded-sm bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-300 text-[11px] flex items-center gap-1 transition-colors"
+              className="px-2 py-1 rounded-sm bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-300 text-xs flex items-center gap-1 transition-colors"
             >
               <Square className="w-3 h-3" />
               <span>ABORT</span>
@@ -318,14 +219,11 @@ export const Screen09Simulation: React.FC = () => {
   if (activeView === 'planet_lander') {
     return (
       <div className="relative w-full h-full flex flex-col bg-space-950">
-        {/* Navigation Switcher Header */}
         <div className="h-10 bg-space-950/95 border-b border-slate-800/80 px-4 flex items-center justify-between text-xs font-mono z-30">
           <div className="flex items-center gap-2">
             <span className="text-emerald-400 font-bold flex items-center gap-1.5">
-              <span className="text-[10px] px-1 py-0.5 rounded bg-emerald-950 border border-emerald-800 text-emerald-300">[DESCENT]</span>
-              <span>PHASE 3: ATMOSPHERIC ENTRY & POWERED DESCENT</span>
+              <span>POWERED DESCENT LANDER</span>
             </span>
-            <span className="text-slate-400 hidden sm:inline">| Hold [SPACE] to fire retro-thrusters, [A/D] to level tilt</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -333,7 +231,7 @@ export const Screen09Simulation: React.FC = () => {
                 sounds.playClick();
                 setActiveView('launch_pad');
               }}
-              className="px-2.5 py-1 rounded-sm bg-blue-950/80 border border-blue-500/50 hover:bg-blue-900 text-blue-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
+              className="px-2.5 py-1 rounded-sm bg-blue-950/80 border border-blue-500/50 hover:bg-blue-900 text-blue-200 text-xs font-bold flex items-center gap-1 transition-colors"
             >
               <Rocket className="w-3 h-3 text-blue-400" />
               <span>LAUNCH PAD</span>
@@ -341,27 +239,9 @@ export const Screen09Simulation: React.FC = () => {
             <button
               onClick={() => {
                 sounds.playClick();
-                setActiveView('lowpoly_world');
-              }}
-              className="px-2.5 py-1 rounded-sm bg-purple-950/80 border border-purple-500/50 hover:bg-purple-900 text-purple-200 text-[11px] font-bold flex items-center gap-1 transition-colors"
-            >
-              <span>3D PLANET WORLD</span>
-            </button>
-            <button
-              onClick={() => {
-                sounds.playClick();
-                setActiveView('cockpit_3d');
-              }}
-              className="px-2.5 py-1 rounded-sm bg-space-900 border border-slate-700 hover:bg-slate-800 text-slate-300 text-[11px] flex items-center gap-1 transition-colors"
-            >
-              <span>3D COCKPIT</span>
-            </button>
-            <button
-              onClick={() => {
-                sounds.playClick();
                 abortSimulation();
               }}
-              className="px-2 py-1 rounded-sm bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-300 text-[11px] flex items-center gap-1 transition-colors"
+              className="px-2 py-1 rounded-sm bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-300 text-xs flex items-center gap-1 transition-colors"
             >
               <Square className="w-3 h-3" />
               <span>ABORT</span>
@@ -371,9 +251,9 @@ export const Screen09Simulation: React.FC = () => {
         <div className="flex-1 overflow-hidden relative">
           <PlanetLanderGame
             destinationName={destination.name}
-            onSuccess={() => {
+            onSuccess={(score?: number) => {
               sounds.playSuccess();
-              setStep('results');
+              completeMission(score);
             }}
             onReturnToHangar={() => abortSimulation()}
           />
@@ -385,63 +265,31 @@ export const Screen09Simulation: React.FC = () => {
   return (
     <div className="relative w-full h-full bg-space-950 flex flex-col justify-between overflow-hidden scanlines">
       {/* Top Telemetry & Controls Banner */}
-      <div className="h-14 bg-space-950/95 border-b border-slate-800/80 px-4 sm:px-6 flex items-center justify-between z-20 backdrop-blur-md">
-        <div className="flex items-center gap-4">
+      <div className="min-h-14 bg-space-950/95 border-b border-white/10 px-3 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2 z-20 backdrop-blur-md">
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-            <span className="font-mono text-xs font-bold text-white tracking-widest uppercase">
-              LIVE TELEMETRY // {state.missionName}
+            <span className="font-mono text-xs font-bold text-white tracking-wider uppercase truncate max-w-[140px] sm:max-w-none">
+              {state.missionName}
             </span>
           </div>
-          <div className="h-4 w-px bg-slate-800 hidden sm:block" />
-          <div className="font-mono text-xs text-nasa-cyan font-bold tracking-wider telemetry-val hidden sm:block">
-            TIME: {telemetry.missionTime}
+          <div className="font-mono text-xs text-sky-400 font-semibold tracking-wider telemetry-val hidden xs:block">
+            {telemetry.missionTime}
           </div>
         </div>
 
         {/* Speed Controls & Abort */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 max-w-full">
           <button
             onClick={() => {
               sounds.playClick();
               setActiveView('lowpoly_world');
             }}
-            className="px-2.5 py-1 rounded-sm bg-purple-950/70 border border-purple-500/60 hover:bg-purple-900/70 text-purple-200 text-xs font-mono font-bold flex items-center gap-1.5 transition-all mr-2"
+            className="px-2.5 py-1 rounded-full bg-purple-500/15 hover:bg-purple-500/25 border border-purple-400/30 text-purple-200 text-xs font-medium flex items-center gap-1 whitespace-nowrap transition-all"
           >
-            <span>3D PLANET WORLD</span>
-          </button>
-          <button
-            onClick={() => {
-              sounds.playClick();
-              setActiveView('launch_minigame');
-            }}
-            className="px-2.5 py-1 rounded-sm bg-orange-950/60 border border-orange-500/60 hover:bg-orange-900/60 text-orange-200 text-xs font-mono font-bold flex items-center gap-1.5 transition-all mr-2"
-          >
-            <Rocket className="w-3.5 h-3.5" />
-            <span>REFLY LAUNCH</span>
+            <span>3D World</span>
           </button>
 
-          <button
-            onClick={() => {
-              sounds.playClick();
-              setActiveView('cockpit_3d');
-            }}
-            className="px-2.5 py-1 rounded-sm bg-cyan-950/60 border border-cyan-500/60 hover:bg-cyan-900/60 text-cyan-200 text-xs font-mono font-bold flex items-center gap-1.5 transition-all mr-2"
-          >
-            <span>3D COCKPIT</span>
-          </button>
-
-          <button
-            onClick={() => {
-              sounds.playClick();
-              setActiveView('planet_lander');
-            }}
-            className="px-2.5 py-1 rounded-sm bg-emerald-950/60 border border-emerald-500/60 hover:bg-emerald-900/60 text-emerald-200 text-xs font-mono font-bold flex items-center gap-1.5 transition-all mr-2"
-          >
-            <span>LANDER</span>
-          </button>
-
-          <span className="text-[10px] font-mono text-slate-400 mr-1 hidden sm:inline">WARP SPEED:</span>
           {[1, 2, 4].map(s => (
             <button
               key={s}
@@ -449,27 +297,25 @@ export const Screen09Simulation: React.FC = () => {
                 sounds.playClick();
                 setSimSpeed(s);
               }}
-              className={`px-2.5 py-1 rounded text-xs font-mono font-bold transition-all ${
+              className={`px-2 py-0.5 rounded-full text-xs font-mono font-medium transition-all ${
                 simSpeed === s 
-                  ? 'bg-nasa-cyan text-black shadow-md' 
-                  : 'bg-space-900 border border-slate-800 text-slate-300 hover:bg-slate-800'
+                  ? 'bg-white text-black font-semibold shadow-sm' 
+                  : 'bg-white/[0.06] border border-white/10 text-slate-300'
               }`}
             >
               {s}x
             </button>
           ))}
 
-          <div className="h-4 w-px bg-slate-800 mx-1 sm:mx-2" />
-
           <button
             onClick={() => {
               sounds.playClick();
               abortSimulation();
             }}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-950/60 hover:bg-red-900/80 border border-red-700/60 text-red-300 text-xs font-mono transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-300 text-xs font-medium transition-colors whitespace-nowrap"
           >
-            <Square className="w-3.5 h-3.5" />
-            <span>ABORT</span>
+            <Square className="w-3 h-3" />
+            <span>Abort</span>
           </button>
         </div>
       </div>
@@ -544,34 +390,73 @@ export const Screen09Simulation: React.FC = () => {
         </div>
 
         {/* Center: 3D Flight Simulation Canvas */}
-        <div className="flex-1 h-full relative bg-space-950">
+        <div className="flex-1 min-h-[36vh] sm:min-h-[46vh] lg:h-full relative bg-space-950">
           <ErrorBoundary fallbackTitle="LAUNCH PAD 3D GRAPHICS">
-            <SpaceCanvas cameraPosition={[0, 0, 8]} fov={50}>
+            <SpaceCanvas cameraPosition={[0, 1.0, 16]} fov={45}>
               <LaunchSimulationScene
                 progressPercent={telemetry.distanceProgressPercent}
                 countdownNumber={countdownNumber}
                 destination={destination}
+                cameraMode={cameraMode}
+                descentInitiated={descentInitiated}
               />
             </SpaceCanvas>
           </ErrorBoundary>
 
-          {/* Countdown Cinematic Overlay */}
+          {/* Camera Mode Toggle & NASA Flight Deck Monitors Toggle */}
+          <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+            <button
+              onClick={() => {
+                sounds.playClick();
+                setShowNasaMonitors(prev => !prev);
+              }}
+              className="flex items-center px-2.5 py-1 rounded-full bg-black/75 border border-cyan-500/40 backdrop-blur-md text-[11px] text-cyan-300 font-mono shadow-sm gap-1.5 hover:bg-black/90 cursor-pointer transition-colors"
+            >
+              <Activity className="w-3 h-3 text-cyan-400" />
+              <span>{showNasaMonitors ? 'NASA HUD: ON' : 'NASA HUD: OFF'}</span>
+            </button>
+            <button
+              onClick={() => {
+                sounds.playClick();
+                setCameraMode(prev => prev === 'basic' ? '3d' : 'basic');
+              }}
+              className="flex items-center px-2.5 py-1 rounded-full bg-black/75 border border-white/20 backdrop-blur-md text-[11px] text-white font-medium shadow-sm gap-1.5 hover:bg-black/90 cursor-pointer transition-colors"
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{cameraMode === 'basic' ? 'Auto-Track' : '3D Orbit'}</span>
+            </button>
+          </div>
+
+          {/* NASA Flight Director Left/Right HUD Monitors (Engine Stats, Best Limit Meter & Chances) */}
+          {showNasaMonitors && (
+            <NasaFlightDeckMonitors
+              progressPercent={telemetry.distanceProgressPercent}
+              destination={destination}
+              telemetry={telemetry}
+            />
+          )}
+
+          {/* Floating Non-Blocking Countdown HUD - Keeps 3D Pad Fully Visible */}
           <AnimatePresence>
             {countdownNumber !== null && countdownNumber > 0 && (
               <motion.div 
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.2 }}
-                className="absolute inset-0 flex flex-col items-center justify-center bg-black/65 backdrop-blur-sm z-30 pointer-events-none"
+                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 1.05 }}
+                className="absolute top-6 inset-x-0 flex flex-col items-center justify-center z-30 pointer-events-none px-4"
               >
-                <div className="text-slate-300 font-mono text-sm tracking-[0.4em] uppercase mb-2">
-                  TERMINAL COUNTDOWN SEQUENCE
-                </div>
-                <div className="font-display font-black text-9xl text-white telemetry-val drop-shadow-2xl animate-bounce">
-                  {countdownNumber}
-                </div>
-                <div className="text-nasa-orange font-mono text-sm tracking-widest uppercase mt-4 animate-pulse">
-                  MAIN ENGINES IGNITION IN T-{countdownNumber} SECONDS
+                <div className="px-6 py-3 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/15 flex flex-col items-center shadow-2xl">
+                  <div className="text-[#86868b] text-[11px] font-mono uppercase tracking-widest mb-0.5">
+                    Terminal Countdown Sequence
+                  </div>
+                  <div className="font-mono font-bold text-5xl sm:text-6xl text-white tracking-tight flex items-baseline gap-1">
+                    <span className="text-2xl text-blue-400 font-normal">T-</span>
+                    <span>{countdownNumber}</span>
+                  </div>
+                  <div className="text-orange-400 text-xs font-medium mt-0.5 flex items-center gap-1.5 animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                    <span>Engines Primed · Pad Clamps Armed</span>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -641,6 +526,60 @@ export const Screen09Simulation: React.FC = () => {
                       </div>
                     </button>
                   ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Lander Descent Decision Prompt */}
+          <AnimatePresence>
+            {showDescentPrompt && (
+              <motion.div
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                className="absolute inset-x-4 sm:inset-x-12 top-16 z-40 max-w-xl mx-auto p-5 sm:p-6 bg-space-900/95 border border-cyan-500 rounded-sm shadow-2xl backdrop-blur-2xl"
+              >
+                <div className="flex items-center gap-3 pb-3 mb-3 border-b border-cyan-500/30 text-cyan-400 font-mono text-xs font-bold tracking-wider uppercase">
+                  <div className="w-8 h-8 rounded-sm bg-cyan-500/20 border border-cyan-500/50 flex items-center justify-center text-xs font-bold shrink-0">
+                    <Radio className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-cyan-400 block font-bold">ORBITAL INSERTION COMPLETE</span>
+                    <span className="text-white text-sm font-sans font-bold">Send Robotic Lander to {destination.name}?</span>
+                  </div>
+                </div>
+
+                <p className="text-xs sm:text-sm text-slate-200 leading-relaxed mb-4 font-sans">
+                  The satellite has successfully entered a stable orbit around {destination.name}. 
+                  Surface conditions are nominal for landing. Do you want to initiate the lander descent sequence?
+                </p>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      sounds.playLaunch();
+                      setShowDescentPrompt(false);
+                      setDescentInitiated(true);
+                      setSimSpeed(1); // Resume sim
+                    }}
+                    className="flex-1 py-2.5 rounded-sm bg-cyan-600 hover:bg-cyan-500 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <Rocket className="w-4 h-4" />
+                    <span>INITIATE DESCENT</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      sounds.playClick();
+                      setShowDescentPrompt(false);
+                      // If aborted or held, we might want to stay in orbit indefinitely.
+                      // For now, let's just resume so they can watch the orbit.
+                      setSimSpeed(1);
+                    }}
+                    className="px-4 py-2.5 rounded-sm bg-space-850 hover:bg-space-800 border border-slate-700 text-slate-300 font-mono font-bold text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>HOLD ORBIT</span>
+                  </button>
                 </div>
               </motion.div>
             )}
@@ -809,7 +748,7 @@ export const Screen09Simulation: React.FC = () => {
       </div>
 
       {/* Bottom Event Log Bar */}
-      <div className="h-28 bg-space-950 border-t border-slate-800/80 px-4 sm:px-6 py-2.5 z-20 flex flex-col justify-between font-mono text-xs">
+      <div className="h-20 sm:h-28 bg-space-950 border-t border-slate-800/80 px-3 sm:px-6 py-2 z-20 flex flex-col justify-between font-mono text-xs shrink-0">
         <div className="flex items-center justify-between pb-1 border-b border-slate-800/60 text-[10px] text-slate-400 uppercase tracking-widest">
           <div className="flex items-center gap-2">
             <Terminal className="w-3.5 h-3.5 text-nasa-cyan" />

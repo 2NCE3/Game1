@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Smartphone, Monitor } from 'lucide-react';
+import React from 'react';
 import { MissionProvider, useMission } from './context/MissionContext';
 
 import { AISideBot } from './components/common/AISideBot';
+import { GlobalNavbar } from './components/layout/GlobalNavbar';
+import { MobileBlocker } from './components/common/MobileBlocker';
 
 // Screens
 import { StartScreen } from './components/screens/StartScreen';
@@ -25,7 +26,6 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 const MainLayout: React.FC = () => {
   const { state } = useMission();
   const { theme } = useTheme();
-  const [deviceMode, setDeviceMode] = useState<'desktop' | 'mobile_frame'>('desktop');
 
   // Active Screen Selector (Full-screen game viewports)
   const renderScreen = () => {
@@ -60,50 +60,19 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className={`w-screen h-screen ${theme === 'dark' ? 'bg-space-950 text-slate-100' : 'bg-slate-50 text-slate-900'} overflow-hidden font-sans select-none relative transition-colors duration-300 flex items-center justify-center`}>
-      {/* Device Mode Switcher Floating in Top-Right corner */}
-      <button
-        onClick={() => setDeviceMode(prev => prev === 'desktop' ? 'mobile_frame' : 'desktop')}
-        className="fixed top-3 right-3 z-50 px-2.5 py-1.5 rounded-full bg-space-900/90 hover:bg-space-800 border border-slate-700 text-slate-200 text-xs font-mono flex items-center gap-1.5 shadow-lg backdrop-blur-md cursor-pointer transition-all hover:scale-105"
-        title="Toggle between Desktop Fullscreen and Mobile Phone (9:16) viewport"
-      >
-        {deviceMode === 'desktop' ? (
-          <>
-            <Smartphone className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden sm:inline">PHONE (9:16)</span>
-          </>
-        ) : (
-          <>
-            <Monitor className="w-3.5 h-3.5 text-orange-400" />
-            <span className="hidden sm:inline">FULLSCREEN</span>
-          </>
-        )}
-      </button>
+    <div className={`w-screen h-screen flex flex-col ${theme === 'dark' ? 'bg-[#030305] text-[#f5f5f7]' : 'bg-[#f5f5f7] text-[#1d1d1f]'} overflow-hidden font-sans select-none relative transition-colors duration-200`}>
+      <MobileBlocker />
+      {/* Universal Top Navigation Bar on every page */}
+      <GlobalNavbar />
 
-      {deviceMode === 'mobile_frame' ? (
-        <div className="w-full max-w-[430px] h-[94vh] max-h-[880px] bg-space-950 rounded-[44px] shadow-2xl border-4 border-slate-700/80 overflow-hidden relative flex flex-col ring-1 ring-slate-500/20">
-          {/* Dynamic Island Speaker Notch */}
-          <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-28 h-5 bg-black rounded-full z-50 pointer-events-none border border-slate-800/80 flex items-center justify-end px-3">
-            <div className="w-2 h-2 rounded-full bg-slate-900 border border-slate-800" />
+      {/* Screen Viewport */}
+      <div className="flex-1 w-full min-h-0 relative overflow-hidden">
+        <ErrorBoundary fallbackTitle={`SCREEN FAILURE [${state.currentStep.toUpperCase()}]`}>
+          <div key={state.currentStep} className="w-full h-full">
+            {renderScreen()}
           </div>
-
-          <div className="flex-1 w-full h-full overflow-hidden relative pt-6">
-            <ErrorBoundary fallbackTitle={`SCREEN FAILURE [${state.currentStep.toUpperCase()}]`}>
-              <div key={state.currentStep} className="w-full h-full">
-                {renderScreen()}
-              </div>
-            </ErrorBoundary>
-          </div>
-        </div>
-      ) : (
-        <div className="w-full h-full relative">
-          <ErrorBoundary fallbackTitle={`SCREEN FAILURE [${state.currentStep.toUpperCase()}]`}>
-            <div key={state.currentStep} className="w-full h-full">
-              {renderScreen()}
-            </div>
-          </ErrorBoundary>
-        </div>
-      )}
+        </ErrorBoundary>
+      </div>
 
       {/* Persistent AI Smart Side Bot Companion */}
       {state.currentStep !== 'start' && <AISideBot />}

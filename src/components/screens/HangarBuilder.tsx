@@ -69,10 +69,10 @@ const CATEGORIES: CategoryTab[] = [
     label: 'CHASSIS',
     icon: <Cpu className="w-4 h-4" />,
     cadetLabel: 'Body',
-    description: 'Structural bus / spacecraft backbone',
-    cadetDescription: 'Pick probe core body',
-    kidQuestion: 'Step 1: What size bus chassis is required?',
-    kidTip: 'A Standard bus holds balanced equipment for solar system voyages.',
+    description: 'NASA Cleanroom: Structural Bus Assembly',
+    cadetDescription: 'Fabricate spacecraft bus on integration jig',
+    kidQuestion: 'Step 1: Spacecraft Chassis Assembly (NASA Cleanroom Lab)',
+    kidTip: 'The chassis is mounted on the pneumatic assembly turntable. Automated robotic arms are fabricating the primary frame.',
   },
   {
     id: 'tools',
@@ -229,25 +229,25 @@ const PartCard: React.FC<{
       sounds.playSelect();
       onClick();
     }}
-    className={`relative p-3.5 rounded-xl border cursor-pointer transition-colors ${
+    className={`relative p-4 rounded-2xl border cursor-pointer transition-all duration-200 backdrop-blur-xl ${
       isSelected
-        ? 'bg-space-850 border-nasa-orange/70 shadow-lg shadow-nasa-orange/15 ring-2 ring-nasa-orange/60'
-        : 'bg-space-950/60 border-slate-800 hover:border-slate-600 hover:bg-space-850/40'
+        ? 'bg-blue-500/10 border-[#0071e3] shadow-lg shadow-blue-500/15 ring-2 ring-[#0071e3]/40'
+        : 'bg-white/[0.04] border-white/10 hover:border-white/20 hover:bg-white/[0.07]'
     }`}
   >
     {isRecommended && isCadet && (
-      <div className="absolute -top-2 right-3 px-2 py-0.5 rounded-full bg-amber-500 text-black font-mono font-bold text-[8px] uppercase shadow-sm flex items-center gap-1 z-10">
-        <Star className="w-2.5 h-2.5 fill-black" />
-        <span>RECOMMENDED</span>
+      <div className="absolute -top-2 right-3 px-2.5 py-0.5 rounded-full bg-blue-500 text-white font-medium text-[9px] shadow-sm flex items-center gap-1 z-10">
+        <Star className="w-2.5 h-2.5 fill-white" />
+        <span>Recommended</span>
       </div>
     )}
 
     <div className="flex items-start justify-between mb-2">
       <div className="flex-1 min-w-0">
-        <h4 className="font-display font-bold text-[13px] text-white leading-tight truncate">
+        <h4 className="font-semibold text-sm text-white leading-tight truncate">
           {name}
         </h4>
-        <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">
+        <p className="text-xs text-[#86868b] mt-0.5 line-clamp-2 leading-relaxed font-normal">
           {description}
         </p>
       </div>
@@ -256,8 +256,8 @@ const PartCard: React.FC<{
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ml-2 ${
-            isToggle ? 'bg-emerald-500' : 'bg-nasa-orange'
-          } text-white`}
+            isToggle ? 'bg-emerald-500' : 'bg-[#0071e3]'
+          } text-white shadow-sm`}
         >
           <Check className="w-3 h-3 stroke-[3]" />
         </motion.div>
@@ -265,11 +265,11 @@ const PartCard: React.FC<{
     </div>
 
     {/* Stats grid */}
-    <div className={`grid grid-cols-${Math.min(stats.length, 4)} gap-1.5 pt-2 mt-2 border-t border-slate-800/60 font-mono text-[10px]`}>
+    <div className={`grid grid-cols-${Math.min(stats.length, 4)} gap-2 pt-2.5 mt-2 border-t border-white/10 text-xs`}>
       {stats.map((stat) => (
         <div key={stat.label}>
-          <span className="text-[8px] text-slate-500 uppercase block">{stat.label}</span>
-          <span className={`font-bold ${stat.color || 'text-cyan-400'}`}>{stat.value}</span>
+          <span className="text-[10px] text-[#86868b] uppercase tracking-wider block font-medium">{stat.label}</span>
+          <span className={`font-semibold telemetry-val ${stat.color || 'text-cyan-400'}`}>{stat.value}</span>
         </div>
       ))}
     </div>
@@ -294,9 +294,11 @@ export const HangarBuilder: React.FC = () => {
     goToPrevStep,
     startSimulation,
     launchToPad,
+    resetMission,
   } = useMission();
 
   const [autoLaunchCountdown, setAutoLaunchCountdown] = useState<number | null>(null);
+  const [mobileView, setMobileView] = useState<'parts' | '3d'>('3d');
 
   const handleDirectLaunch = useCallback(() => {
     sounds.playLaunch();
@@ -305,8 +307,8 @@ export const HangarBuilder: React.FC = () => {
 
   const [activeCategory, setActiveCategory] = useState<HangarCategory>('chassis');
 
-  // Current selections for 3D viewer
-  const currentBus = SPACECRAFT_BUSES.find((b) => b.id === state.busId) || SPACECRAFT_BUSES[1];
+  // Current selections for 3D viewer (only populated if selected or in demo mode)
+  const currentBus = SPACECRAFT_BUSES.find((b) => b.id === state.busId) || null;
   const currentPower = POWER_SYSTEMS.find((p) => p.id === state.powerSystemId) || null;
   const currentComms = COMMS_SYSTEMS.find((c) => c.id === state.commsSystemId) || null;
   const currentProp = PROPULSION_SYSTEMS.find((p) => p.id === state.propulsionSystemId) || null;
@@ -330,25 +332,6 @@ export const HangarBuilder: React.FC = () => {
 
   const completedCount = Object.values(completionMap).filter(Boolean).length;
   const allComplete = completedCount === 8;
-
-  // Auto-advance prompt when all 8 are complete
-  React.useEffect(() => {
-    if (allComplete && autoLaunchCountdown === null) {
-      setAutoLaunchCountdown(4);
-      const timer = setInterval(() => {
-        setAutoLaunchCountdown(prev => {
-          if (prev === null || prev <= 1) {
-            clearInterval(timer);
-            sounds.playLaunch();
-            launchToPad();
-            return null;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [allComplete, autoLaunchCountdown, launchToPad]);
 
   // Navigate to next incomplete category
   const goToNextCategory = useCallback(() => {
@@ -571,59 +554,127 @@ export const HangarBuilder: React.FC = () => {
   const activeCategoryData = CATEGORIES.find((c) => c.id === activeCategory)!;
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden bg-space-950">
-      {/* Top Game HUD Header */}
-      <div className="h-12 bg-space-950/90 border-b border-slate-800/80 px-4 sm:px-6 flex items-center justify-between z-20 backdrop-blur-md">
-        <div className="flex items-center gap-3">
+    <div className="w-full h-full flex flex-col overflow-hidden bg-[#06070a]">
+      {/* Top Game HUD Header (Apple Frosted Glass) */}
+      <div className="h-14 bg-black/60 border-b border-white/10 px-3 sm:px-6 flex items-center justify-between z-20 backdrop-blur-2xl">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={() => {
               sounds.playClick();
               setStep('destination');
             }}
-            className="px-2.5 py-1 rounded-lg border border-slate-700/80 hover:bg-slate-800 text-slate-300 font-mono text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="px-2.5 sm:px-3 py-1.5 rounded-full border border-white/10 hover:bg-white/[0.08] bg-white/[0.04] text-slate-300 text-xs font-medium flex items-center gap-1 transition-all cursor-pointer"
             title="Return to Solar System map"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
-            <span>WORLDS</span>
+            <span className="hidden xs:inline">Worlds</span>
           </button>
 
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-nasa-cyan animate-pulse" />
-            <span className="font-mono text-xs font-bold text-white tracking-widest uppercase">
-              HANGAR // {state.missionName}
+            <span className="w-2 h-2 rounded-full bg-[#0071e3] animate-pulse" />
+            <span className="text-xs font-semibold text-white tracking-tight truncate max-w-[110px] sm:max-w-none">
+              {state.missionName}
             </span>
           </div>
 
-          <div className="h-4 w-px bg-slate-800 hidden sm:block" />
+          <div className="h-4 w-px bg-white/10 hidden sm:block" />
 
           {currentDestination && (
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-space-900 border border-slate-800 text-[11px] font-mono">
-              <span className="text-slate-400">TARGET:</span>
-              <span className="font-bold text-nasa-orange">{currentDestination.name}</span>
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-xs font-normal">
+              <span className="text-[#86868b]">Target:</span>
+              <span className="font-semibold text-white">{currentDestination.name}</span>
             </div>
+          )}
+
+          {state.isDemoMode && (
+            <>
+              <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/35 text-cyan-300 text-xs font-mono font-medium shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                <span>DEMO PRELOADED</span>
+              </div>
+              <button
+                onClick={() => {
+                  sounds.playClick();
+                  resetMission('hangar');
+                }}
+                className="hidden md:flex items-center gap-1 px-3 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 text-slate-300 hover:text-white text-xs font-mono transition-all cursor-pointer"
+                title="Clear preloaded demo parts and build from scratch"
+              >
+                <span>Build From Scratch</span>
+              </button>
+            </>
           )}
         </div>
 
-        {/* Quick Launch Button directly from Hangar Header */}
-        <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-3 text-xs font-mono text-slate-400">
-            <span>PARTS: <strong className="text-white">{completedCount}/8</strong></span>
-            <span>MASS: <strong className={resources.isOverMass ? 'text-red-400' : 'text-emerald-400'}>{resources.totalMass} kg</strong></span>
+        {/* Mobile View Toggle & Quick Launch */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Mobile View Selector Pill */}
+          <div className="flex md:hidden items-center p-0.5 rounded-full bg-white/[0.08] border border-white/10 text-[11px]">
+            <button
+              onClick={() => setMobileView('parts')}
+              className={`px-2.5 py-1 rounded-full font-medium transition-all ${
+                mobileView === 'parts' ? 'bg-white text-black font-semibold shadow-sm' : 'text-slate-300'
+              }`}
+            >
+              Parts
+            </button>
+            <button
+              onClick={() => setMobileView('3d')}
+              className={`px-2.5 py-1 rounded-full font-medium transition-all ${
+                mobileView === '3d' ? 'bg-white text-black font-semibold shadow-sm' : 'text-slate-300'
+              }`}
+            >
+              3D Ship
+            </button>
+          </div>
+
+          <div className="hidden lg:flex items-center gap-3 text-xs text-[#86868b]">
+            <span>Subsystems: <strong className="text-white font-medium">{completedCount}/8</strong></span>
+            <span>Total Mass: <strong className={resources.isOverMass ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold'}>{resources.totalMass.toLocaleString()} kg</strong></span>
           </div>
 
           <button
             onClick={handleDirectLaunch}
-            className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-lg shadow-emerald-500/25 flex items-center gap-2 cursor-pointer"
+            className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium text-xs transition-all shadow-md shadow-blue-500/25 flex items-center gap-1.5 cursor-pointer active:scale-[0.98]"
           >
             <Rocket className="w-3.5 h-3.5" />
-            <span>LAUNCH ROCKET 🚀</span>
+            <span>Launch →</span>
           </button>
         </div>
       </div>
 
+      {/* Mobile Horizontal Subsystems Category Bar */}
+      <div className="flex md:hidden overflow-x-auto py-2 px-3 gap-1.5 bg-black/40 border-b border-white/10 shrink-0 scrollbar-none">
+        {CATEGORIES.map((cat) => {
+          const isActive = activeCategory === cat.id;
+          const isDone = completionMap[cat.id];
+          return (
+            <button
+              key={cat.id}
+              onClick={() => {
+                sounds.playClick();
+                setActiveCategory(cat.id);
+                setMobileView('parts');
+              }}
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                isActive
+                  ? 'bg-white text-black font-semibold shadow-sm'
+                  : isDone
+                  ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300'
+                  : 'bg-white/[0.05] border border-white/10 text-slate-300'
+              }`}
+            >
+              <span className="text-xs">{cat.emoji}</span>
+              <span>{cadetMode ? cat.cadetLabel : cat.label}</span>
+              {isDone && <Check className="w-3 h-3 text-emerald-400 stroke-[2.5]" />}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="flex-1 flex overflow-hidden">
-        {/* ─── LEFT: Category Tabs (vertical) ────────────────── */}
-        <div className="w-[74px] bg-space-900/80 border-r border-slate-800/60 flex flex-col py-2 overflow-y-auto shrink-0 select-none">
+        {/* ─── LEFT: Category Tabs (vertical on desktop) ─────── */}
+        <div className="hidden md:flex w-[74px] bg-space-900/80 border-r border-slate-800/60 flex-col py-2 overflow-y-auto shrink-0 select-none">
           {CATEGORIES.map((cat) => {
             const isActive = activeCategory === cat.id;
             const isDone = completionMap[cat.id];
@@ -715,34 +766,54 @@ export const HangarBuilder: React.FC = () => {
         </div>
 
         {/* ─── CENTER: 3D Spacecraft Viewer ──────────────────── */}
-        <div className="flex-1 relative bg-space-950 min-w-0">
-          <SpaceCanvas cameraPosition={[0, 0, 4.2]} fov={45}>
-            <SpacecraftViewer
-              bus={currentBus}
-              power={currentPower}
-              comms={currentComms}
-              propulsion={currentProp}
-              payloads={currentPayloads}
-              interactive={true}
-            />
-          </SpaceCanvas>
-
-          {/* Destination badge overlay */}
-          {currentDestination && (
-            <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-space-900/80 border border-slate-800 backdrop-blur-sm">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: currentDestination.color }}
+        <div className={`flex-1 relative bg-[#030305] min-w-0 ${mobileView === '3d' ? 'flex flex-col' : 'hidden md:flex md:flex-col'}`}>
+          <div className="flex-1 w-full h-full relative">
+            <SpaceCanvas cameraPosition={[0, 0.35, 4.4]} fov={45} showStars={false}>
+              <SpacecraftViewer
+                bus={currentBus}
+                power={currentPower}
+                comms={currentComms}
+                propulsion={currentProp}
+                payloads={currentPayloads}
+                interactive={true}
+                isInLab={true}
               />
-              <span className="text-[11px] font-mono font-bold text-white">
-                {cadetMode ? `Going to: ${currentDestination.name}` : currentDestination.name}
-              </span>
+            </SpaceCanvas>
+
+            {/* NASA High-Bay Cleanroom Lab Status HUD Overlay */}
+            <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5 pointer-events-none">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 border border-red-500/30 backdrop-blur-md shadow-lg shadow-black/80">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[11px] font-bold text-white tracking-wide font-mono">
+                  NASA HIGH-BAY INTEGRATION FACILITY // CLEANROOM BAY 04
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-black/60 border border-white/10 backdrop-blur-sm text-[10px] text-slate-300 font-mono">
+                <span>Robotic Jig:</span>
+                <span className="text-emerald-400 font-semibold">Dual Builder Armatures Active [Clamped]</span>
+              </div>
+
+              {currentDestination && (
+                <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-black/50 border border-white/10 backdrop-blur-sm text-[10px] text-slate-400 font-mono">
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: currentDestination.color }}
+                  />
+                  <span>Target Mission: {currentDestination.name}</span>
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Commander Nova Hints (top-right) */}
+            <div className="absolute top-4 right-4 z-10 w-64 max-w-[calc(100vw-32px)]">
+              <CommanderNova />
+            </div>
+          </div>
 
           {/* Resource Gauges Overlay (bottom of 3D view) */}
-          <div className="absolute bottom-0 left-0 right-0 z-10 p-4 bg-gradient-to-t from-space-950 via-space-950/90 to-transparent">
-            <div className="flex gap-4">
+          <div className="p-3 sm:p-4 bg-gradient-to-t from-[#06070a] via-[#06070a]/95 to-transparent z-10">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
               <ResourceGauge
                 label="Mass"
                 cadetLabel="⚖️ Weight"
@@ -789,15 +860,10 @@ export const HangarBuilder: React.FC = () => {
               />
             </div>
           </div>
-
-          {/* Commander Nova Hints (top-right) */}
-          <div className="absolute top-4 right-4 z-10 w-72">
-            <CommanderNova />
-          </div>
         </div>
 
         {/* ─── RIGHT: Parts Panel ────────────────────────────── */}
-        <div className="w-[360px] bg-space-900/90 border-l border-slate-800/60 flex flex-col overflow-hidden backdrop-blur-md">
+        <div className={`w-full md:w-[360px] bg-black/40 md:border-l border-white/10 flex flex-col overflow-hidden backdrop-blur-2xl ${mobileView === 'parts' ? 'flex' : 'hidden md:flex'}`}>
           {/* Panel Header - Child-Friendly Step Guidance */}
           <div className="p-3.5 bg-gradient-to-r from-space-900 via-cyan-950/30 to-space-900 border-b border-slate-800">
             <div className="flex items-center justify-between mb-1.5">

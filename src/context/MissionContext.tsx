@@ -40,7 +40,8 @@ interface MissionContextType {
   selectTrajectory: (trajId: string) => void;
   setMissionName: (name: string) => void;
   loadDemoMission: () => void;
-  resetMission: () => void;
+  resetMission: (targetStep?: ScreenStep) => void;
+  completeMission: (manualScore?: number) => void;
   canNavigateToStep: (step: ScreenStep) => boolean;
   
   // Cadet / Child-friendly assistance
@@ -80,7 +81,20 @@ const INITIAL_STATE: MissionState = {
   status: 'DRAFT',
   resolvedDecisions: {},
   cadetMode: true,
+  isDemoMode: false,
   lastResult: null
+};
+
+export const INITIAL_TELEMETRY: TelemetrySnapshot = {
+  altitudeKm: 0,
+  velocityKms: 0,
+  fuelPercent: 100,
+  powerWatts: 0,
+  tempCelsius: 21,
+  signalStrength: 100,
+  missionTime: 'T-00:00:10',
+  stageName: 'PRE-LAUNCH PAD OPERATIONS',
+  distanceProgressPercent: 0
 };
 
 const MissionContext = createContext<MissionContextType | undefined>(undefined);
@@ -92,17 +106,7 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [countdownNumber, setCountdownNumber] = useState<number | null>(null);
   const [activeDecision, setActiveDecision] = useState<SimEventDecision | null>(null);
   const [eventLogs, setEventLogs] = useState<SimulationEventLog[]>([]);
-  const [telemetry, setTelemetry] = useState<TelemetrySnapshot>({
-    altitudeKm: 0,
-    velocityKms: 0,
-    fuelPercent: 100,
-    powerWatts: 0,
-    tempCelsius: 21,
-    signalStrength: 100,
-    missionTime: 'T-00:00:10',
-    stageName: 'PRE-LAUNCH PAD OPERATIONS',
-    distanceProgressPercent: 0
-  });
+  const [telemetry, setTelemetry] = useState<TelemetrySnapshot>(INITIAL_TELEMETRY);
 
   // Navigation guard
   const canNavigateToStep = useCallback((step: ScreenStep): boolean => {
@@ -132,6 +136,16 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       briefId,
       destinationId: brief ? brief.targetDestinationId : prev.destinationId,
       missionName: brief ? `${brief.title.split(' ')[0]} FORGE` : prev.missionName,
+      // Fresh custom build: only preload all 8 subsystems if demo mode was explicitly loaded
+      busId: null,
+      payloadIds: [],
+      launchVehicleId: null,
+      powerSystemId: null,
+      commsSystemId: null,
+      propulsionSystemId: null,
+      thermalSystemId: null,
+      trajectoryId: null,
+      isDemoMode: false,
       currentStep: 'destination'
     }));
   }, []);
@@ -307,6 +321,11 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Demo Mission loader
   const loadDemoMission = useCallback(() => {
+    setIsSimRunning(false);
+    setCountdownNumber(null);
+    setActiveDecision(null);
+    setEventLogs([]);
+    setTelemetry(INITIAL_TELEMETRY);
     setState({
       briefId: 'lunar-polar',
       destinationId: 'moon',
@@ -319,21 +338,28 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       thermalSystemId: 'therm-pipes',
       trajectoryId: 'traj-balanced',
       missionName: 'LUNAR ICE HUNTER',
-      currentStep: 'review',
+      currentStep: 'hangar',
       status: 'READY',
       resolvedDecisions: {},
       cadetMode: true,
+      isDemoMode: true,
       lastResult: null
     });
   }, []);
 
   // Reset Mission
-  const resetMission = useCallback(() => {
+  const resetMission = useCallback((targetStep: ScreenStep = 'brief') => {
     setIsSimRunning(false);
     setCountdownNumber(null);
     setActiveDecision(null);
     setEventLogs([]);
-    setState(INITIAL_STATE);
+    setTelemetry(INITIAL_TELEMETRY);
+    setState({
+      ...INITIAL_STATE,
+      currentStep: targetStep,
+      isDemoMode: false,
+      lastResult: null
+    });
   }, []);
 
   // CALCULATE MISSION RESOURCES & FEASIBILITY FORMULAS
@@ -644,6 +670,7 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // SIMULATION ENGINE LOGIC
   const launchToPad = useCallback(() => {
+    setTelemetry(INITIAL_TELEMETRY);
     setState(prev => {
       const busId = prev.busId || 'bus-standard';
       const payloadIds = prev.payloadIds.length > 0 ? prev.payloadIds : ['inst-camera', 'inst-spectrometer'];
@@ -678,6 +705,91 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
       type: 'nominal'
     }]);
   }, []);
+
+  const completeMission = useCallback((manualScore?: number) => {
+    setIsSimRunning(false);
+    setCountdownNumber(null);
+    setActiveDecision(null);
+
+    const comms = COMMS_SYSTEMS.find(c => c.id === state.commsSystemId);
+    const prop = PROPULSION_SYSTEMS.find(p => p.id === state.propulsionSystemId);
+    const bus = SPACECRAFT_BUSES.find(b => b.id === state.busId);
+    const traj = TRAJECTORY_OPTIONS.find(t => t.id === state.trajectoryId);
+
+    const hasCriticalFail = resources.isOverMass || resources.isPowerDeficit || resources.isDeltaVDeficit;
+    const hasMajorWarning = resources.powerReservePercent < 15 || resources.isOverBudget || resources.overallReliability < 92;
+
+    let outcome: 'MISSION SUCCESS' | 'PARTIAL SUCCESS' | 'MISSION FAILURE' = 'MISSION SUCCESS';
+    if (hasCriticalFail) {
+      outcome = 'MISSION FAILURE';
+    } else if (hasMajorWarning) {
+      outcome = 'PARTIAL SUCCESS';
+    }
+
+    const sciScore = Math.min(100, Math.round((resources.totalScience / 65) * 100));
+    const engScore = resources.overallReliability;
+    const resScore = Math.max(40, 100 - (resources.isOverBudget ? 30 : 0) - (resources.isOverMass ? 35 : 0) - (resources.powerReservePercent < 20 ? 15 : 0));
+    const commScore = comms?.signalReliability || 85;
+    const trajScore = traj?.riskModifier === 'LOW' ? 95 : (traj?.riskModifier === 'BALANCED' ? 88 : 74);
+    let overall = Math.round((sciScore * 0.3) + (engScore * 0.25) + (resScore * 0.2) + (commScore * 0.15) + (trajScore * 0.1));
+    if (typeof manualScore === 'number' && manualScore > 0) {
+      overall = Math.round(overall * 0.4 + manualScore * 0.6);
+    }
+
+    const whatWentWell: string[] = [];
+    const whatCouldImprove: string[] = [];
+
+    if (resources.powerReservePercent >= 25) whatWentWell.push('Robust electrical reserve prevented power shedding during orbital shadow eclipses.');
+    if (comms?.type === 'HIGH_GAIN' || comms?.type === 'DEEP_SPACE') whatWentWell.push('High-gain communication link downlinked 100% of telemetry and gigabytes of science imagery without packet loss.');
+    if (prop?.efficiency === 'HIGH' || prop?.efficiency === 'ULTRA-HIGH') whatWentWell.push('High specific-impulse propulsion provided outstanding delta-v maneuvering margin.');
+    if (resources.readinessScore > 90) whatWentWell.push('Disciplined systems integration passed all Flight Readiness margins with flying colors.');
+
+    if (resources.isOverBudget) whatCouldImprove.push('Mission exceeded initial budget authorization, requiring congressional contingency reserve.');
+    if (resources.powerReservePercent < 20) whatCouldImprove.push('Narrow electrical power margin caused thermal sensor throttling during battery recharge.');
+    if (comms?.type === 'LOW_GAIN') whatCouldImprove.push('Low-gain antenna bottlenecked science downlink, delaying high-resolution spectrometer analysis.');
+    if (resources.isOverMass) whatCouldImprove.push('Excess spacecraft mass reduced launcher apogee margin, risking orbital injection.');
+
+    let criticalDecisionNote = 'Your balanced subsystem selection kept the spacecraft structurally sound while delivering high-value planetary science.';
+    if (comms?.type === 'HIGH_GAIN' && state.briefId === 'lunar-polar') {
+      criticalDecisionNote = 'The high-gain Cassegrain communication system increased mission cost by $62M but prevented critical data loss when surveying shadowed craters.';
+    } else if (prop?.type === 'ELECTRIC') {
+      criticalDecisionNote = 'Choosing high-efficiency ion propulsion saved over 1,500 kg of propellant mass, allowing heavy scientific radar integration.';
+    } else if (resources.isPowerDeficit) {
+      criticalDecisionNote = 'Severe electrical deficit caused instrument shutdowns during destination approach, leading to mission failure.';
+    }
+
+    const finalReport: MissionResultReport = {
+      outcome,
+      scientificReturnScore: sciScore,
+      engineeringReliabilityScore: engScore,
+      resourceEfficiencyScore: resScore,
+      communicationScore: commScore,
+      trajectoryEfficiencyScore: trajScore,
+      overallScore: overall,
+      scienceDataPercent: outcome === 'MISSION FAILURE' ? 24 : (outcome === 'PARTIAL SUCCESS' ? 68 : 96),
+      summary: outcome === 'MISSION SUCCESS' 
+        ? 'All primary scientific objectives achieved. Spacecraft successfully completed orbital insertion and returned high-fidelity exploratory data.'
+        : (outcome === 'PARTIAL SUCCESS' 
+            ? 'Mission partially achieved scientific goals. Hardware degraded due to resource constraints or thermal limits, but returned critical data.'
+            : 'Catastrophic engineering failure occurred during flight due to unaddressed system deficits. Mission lost.'),
+      whatWentWell,
+      whatCouldImprove,
+      criticalDecisionNote
+    };
+
+    setState(s => ({
+      ...s,
+      status: outcome === 'MISSION FAILURE' ? 'FAILED' : 'COMPLETE',
+      currentStep: 'results',
+      lastResult: finalReport
+    }));
+
+    setTelemetry(prev => ({
+      ...prev,
+      distanceProgressPercent: 100,
+      stageName: 'MISSION COMPLETE — SCIENCE OPERATIONS ARCHIVED'
+    }));
+  }, [state, resources]);
 
   const startSimulation = useCallback(() => {
     launchToPad();
@@ -749,80 +861,7 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
           // Check for completion
           if (nextProgress >= 100) {
             clearInterval(timer);
-            setIsSimRunning(false);
-            
-            // Deterministic calculation of outcome based on engineering trade-offs!
-            const comms = COMMS_SYSTEMS.find(c => c.id === state.commsSystemId);
-            const prop = PROPULSION_SYSTEMS.find(p => p.id === state.propulsionSystemId);
-            const bus = SPACECRAFT_BUSES.find(b => b.id === state.busId);
-            const traj = TRAJECTORY_OPTIONS.find(t => t.id === state.trajectoryId);
-
-            const hasCriticalFail = resources.isOverMass || resources.isPowerDeficit || resources.isDeltaVDeficit;
-            const hasMajorWarning = resources.powerReservePercent < 15 || resources.isOverBudget || resources.overallReliability < 92;
-
-            let outcome: 'MISSION SUCCESS' | 'PARTIAL SUCCESS' | 'MISSION FAILURE' = 'MISSION SUCCESS';
-            if (hasCriticalFail) {
-              outcome = 'MISSION FAILURE';
-            } else if (hasMajorWarning) {
-              outcome = 'PARTIAL SUCCESS';
-            }
-
-            // Scores
-            const sciScore = Math.min(100, Math.round((resources.totalScience / 65) * 100));
-            const engScore = resources.overallReliability;
-            const resScore = Math.max(40, 100 - (resources.isOverBudget ? 30 : 0) - (resources.isOverMass ? 35 : 0) - (resources.powerReservePercent < 20 ? 15 : 0));
-            const commScore = comms?.signalReliability || 85;
-            const trajScore = traj?.riskModifier === 'LOW' ? 95 : (traj?.riskModifier === 'BALANCED' ? 88 : 74);
-            const overall = Math.round((sciScore * 0.3) + (engScore * 0.25) + (resScore * 0.2) + (commScore * 0.15) + (trajScore * 0.1));
-
-            const whatWentWell: string[] = [];
-            const whatCouldImprove: string[] = [];
-
-            if (resources.powerReservePercent >= 25) whatWentWell.push('Robust electrical reserve prevented power shedding during orbital shadow eclipses.');
-            if (comms?.type === 'HIGH_GAIN' || comms?.type === 'DEEP_SPACE') whatWentWell.push('High-gain communication link downlinked 100% of telemetry and gigabytes of science imagery without packet loss.');
-            if (prop?.efficiency === 'HIGH' || prop?.efficiency === 'ULTRA-HIGH') whatWentWell.push('High specific-impulse propulsion provided outstanding delta-v maneuvering margin.');
-            if (resources.readinessScore > 90) whatWentWell.push('Disciplined systems integration passed all Flight Readiness margins with flying colors.');
-
-            if (resources.isOverBudget) whatCouldImprove.push('Mission exceeded initial budget authorization, requiring congressional contingency reserve.');
-            if (resources.powerReservePercent < 20) whatCouldImprove.push('Narrow electrical power margin caused thermal sensor throttling during battery recharge.');
-            if (comms?.type === 'LOW_GAIN') whatCouldImprove.push('Low-gain antenna bottlenecked science downlink, delaying high-resolution spectrometer analysis.');
-            if (resources.isOverMass) whatCouldImprove.push('Excess spacecraft mass reduced launcher apogee margin, risking orbital injection.');
-
-            let criticalDecisionNote = 'Your balanced subsystem selection kept the spacecraft structurally sound while delivering high-value planetary science.';
-            if (comms?.type === 'HIGH_GAIN' && state.briefId === 'lunar-polar') {
-              criticalDecisionNote = 'The high-gain Cassegrain communication system increased mission cost by $62M but prevented critical data loss when surveying shadowed craters.';
-            } else if (prop?.type === 'ELECTRIC') {
-              criticalDecisionNote = 'Choosing high-efficiency ion propulsion saved over 1,500 kg of propellant mass, allowing heavy scientific radar integration.';
-            } else if (resources.isPowerDeficit) {
-              criticalDecisionNote = 'Severe electrical deficit caused instrument shutdowns during destination approach, leading to mission failure.';
-            }
-
-            const finalReport: MissionResultReport = {
-              outcome,
-              scientificReturnScore: sciScore,
-              engineeringReliabilityScore: engScore,
-              resourceEfficiencyScore: resScore,
-              communicationScore: commScore,
-              trajectoryEfficiencyScore: trajScore,
-              overallScore: overall,
-              scienceDataPercent: outcome === 'MISSION FAILURE' ? 24 : (outcome === 'PARTIAL SUCCESS' ? 68 : 96),
-              summary: outcome === 'MISSION SUCCESS' 
-                ? 'All primary scientific objectives achieved. Spacecraft successfully completed orbital insertion and returned high-fidelity exploratory data.'
-                : (outcome === 'PARTIAL SUCCESS' 
-                    ? 'Mission partially achieved scientific goals. Hardware degraded due to resource constraints or thermal limits, but returned critical data.'
-                    : 'Catastrophic engineering failure occurred during flight due to unaddressed system deficits. Mission lost.'),
-              whatWentWell,
-              whatCouldImprove,
-              criticalDecisionNote
-            };
-
-            setState(s => ({
-              ...s,
-              status: outcome === 'MISSION FAILURE' ? 'FAILED' : 'COMPLETE',
-              currentStep: 'results',
-              lastResult: finalReport
-            }));
-
+            completeMission();
             return {
               ...prev,
               distanceProgressPercent: 100,
@@ -969,7 +1008,8 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
         countdownNumber,
         startSimulation,
         launchToPad,
-        abortSimulation
+        abortSimulation,
+        completeMission
       }}
     >
       {children}

@@ -401,19 +401,19 @@ export const Screen08Review: React.FC = () => {
       </div>
 
       {/* Bottom Launch Action Bar */}
-      <div className="p-4 sm:px-6 bg-space-950/95 border-t border-slate-800/90 flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-0 z-30 backdrop-blur-md">
+      <div className="p-3 sm:p-4 sm:px-6 bg-black/60 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-30 backdrop-blur-2xl">
         <button
           onClick={() => {
             sounds.playClick();
             setStep('hangar');
           }}
-          className="px-4 py-2.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 font-mono text-xs flex items-center gap-2 transition-colors"
+          className="w-full sm:w-auto px-4 py-2.5 rounded-full border border-white/10 hover:bg-white/[0.08] bg-white/[0.04] text-slate-300 text-xs font-medium flex items-center justify-center gap-2 transition-all cursor-pointer order-2 sm:order-1"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>BACK TO HANGAR</span>
+          <span>Back to Hangar</span>
         </button>
 
-        <div className="flex flex-wrap items-center gap-3 justify-center sm:justify-end">
+        <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto justify-end order-1 sm:order-2">
           {/* If there's an issue, direct the player back to the Hangar where Nova gives hints */}
           {hasCriticalFailure && (
             <button
@@ -421,25 +421,25 @@ export const Screen08Review: React.FC = () => {
                 sounds.playAlert();
                 setStep('hangar');
               }}
-              className="px-5 py-3 rounded-xl bg-purple-950/80 border border-purple-500/60 hover:bg-purple-900/80 text-purple-200 font-mono font-bold text-xs tracking-wider uppercase transition-all shadow-lg shadow-purple-500/20 flex items-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-full bg-purple-500/15 border border-purple-400/30 hover:bg-purple-500/25 text-purple-200 text-xs font-medium transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
               title="Return to Hangar to consult Commander Nova on fixing mass, power, or fuel"
             >
               <span>🧑‍🚀</span>
-              <span>RESOLVE ISSUES IN HANGAR // NOVA HAS HINTS</span>
+              <span>Resolve Issues in Hangar</span>
             </button>
           )}
 
           <button
             onClick={handleLaunch}
             disabled={hasCriticalFailure}
-            className={`px-8 py-3.5 rounded-xl font-mono font-bold text-sm tracking-widest uppercase transition-all flex items-center gap-2.5 shadow-xl ${
+            className={`w-full sm:w-auto px-6 py-2.5 rounded-full font-semibold text-xs tracking-tight transition-all flex items-center justify-center gap-2 shadow-md ${
               hasCriticalFailure
-                ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-                : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white shadow-emerald-500/25 cursor-pointer ring-2 ring-emerald-400/30'
+                ? 'bg-white/10 text-slate-500 cursor-not-allowed border border-white/10'
+                : 'bg-[#0071e3] hover:bg-[#0077ed] text-white shadow-[#0071e3]/20 cursor-pointer active:scale-[0.98]'
             }`}
           >
-            <Play className="w-4 h-4 fill-white" />
-            <span>ENTER FLIGHT DECK // PILOT LAUNCH 🚀</span>
+            <Play className="w-3.5 h-3.5 fill-white" />
+            <span>Enter Flight Deck · Launch</span>
           </button>
         </div>
       </div>

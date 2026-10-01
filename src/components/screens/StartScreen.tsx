@@ -1,34 +1,39 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SpaceCanvas } from '../3d/SpaceCanvas';
-import { EarthScene } from '../3d/EarthScene';
+import { GalaxySpaceScene } from '../3d/GalaxySpaceScene';
 import { useMission } from '../../context/MissionContext';
 import { useTheme } from '../../context/ThemeContext';
+import { MISSION_BRIEFS, DESTINATIONS } from '../../data/missionsData';
 import { EducationModal } from '../common/EducationModal';
-import { NASAChallengeLinksModal, NASAChallengeFooterBar } from '../common/NASAChallengeLinks';
+import { NASAChallengeLinksModal } from '../common/NASAChallengeLinks';
 import { StoryPrologueModal } from '../common/StoryPrologueModal';
-import { BragLaunchTrailerDemo } from '../common/BragLaunchTrailerDemo';
-import { KidHowToPlaySection } from '../common/KidHowToPlaySection';
-import { WhyAndHowChallengeSection } from '../common/WhyAndHowChallengeSection';
-import { CadetFAQSection } from '../common/CadetFAQSection';
+import { SatellitesTrackerHUD } from '../common/SatellitesTrackerHUD';
 import { sounds } from '../../utils/soundEffects';
 
 export const StartScreen: React.FC = () => {
-  const { setStep, loadDemoMission, selectDestination, launchToPad } = useMission();
+  const { setStep, selectBrief, loadDemoMission, selectDestination } = useMission();
   const { theme, toggleTheme } = useTheme();
-  
+
+  const [hoveredMissionId, setHoveredMissionId] = useState<string | null>('exodus-new-eden');
   const [showEduModal, setShowEduModal] = useState(false);
   const [showNasaLinksModal, setShowNasaLinksModal] = useState(false);
   const [showStoryModal, setShowStoryModal] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(sounds.enabled);
 
-  const handleStartMission = () => {
-    sounds.playClick();
-    setStep('destination');
+  // Active hovered destination for 3D galaxy scene
+  const activeDestinationId = hoveredMissionId 
+    ? MISSION_BRIEFS.find(b => b.id === hoveredMissionId)?.targetDestinationId || 'new-eden'
+    : 'new-eden';
+
+  const handleSelectMission = (briefId: string) => {
+    sounds.playSuccess();
+    selectBrief(briefId);
   };
 
   const handleStartExodus = () => {
     sounds.playSuccess();
+    selectBrief('exodus-new-eden');
     selectDestination('new-eden');
     setShowStoryModal(false);
     setStep('hangar');
@@ -40,153 +45,227 @@ export const StartScreen: React.FC = () => {
     setStep('hangar');
   };
 
-  const handleSelectPreset = (presetName: string) => {
-    sounds.playSuccess();
-    loadDemoMission();
-    setStep('hangar');
-  };
-
   const toggleAudio = () => {
     const newState = sounds.toggleSound();
     setSoundEnabled(newState);
   };
 
   return (
-    <div className="relative w-full h-full overflow-y-auto flex flex-col items-center justify-between select-none bg-[#f8f7f4] dark:bg-[#09090d] text-slate-900 dark:text-slate-100 transition-colors duration-150 scroll-smooth">
-      {/* 3D Background with interactive Earth & Stars */}
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-30 dark:opacity-80 transition-opacity duration-300">
-        <SpaceCanvas cameraPosition={[0, 0, 7.5]} fov={42}>
-          <EarthScene sceneVariant="depleted" />
-        </SpaceCanvas>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#f8f7f4] via-[#f8f7f4]/80 to-[#f8f7f4]/40 dark:from-[#09090d] dark:via-[#09090d]/70 dark:to-[#09090d]/80 pointer-events-none transition-colors duration-150" />
+    <div className="relative w-full h-full overflow-hidden flex flex-col lg:flex-row select-none bg-[#030305] text-[#f5f5f7]">
+      {/* =========================================================================
+          LEFT / BACKGROUND VIEWPORT: 3D GALAXY VIEW & DEEP SPACE
+          ========================================================================= */}
+      <div className="relative flex-1 h-[42vh] lg:h-full w-full overflow-hidden bg-[#030305]">
+        {/* 3D Galaxy Canvas with OrbitControls */}
+        <div className="absolute inset-0 z-0">
+          <SpaceCanvas cameraPosition={[0, 4, 13]} fov={48} showStars={false}>
+            <GalaxySpaceScene 
+              highlightedDestination={activeDestinationId}
+              onSelectDestination={(destId) => {
+                const match = MISSION_BRIEFS.find(b => b.targetDestinationId === destId);
+                if (match) {
+                  setHoveredMissionId(match.id);
+                }
+              }}
+            />
+          </SpaceCanvas>
+        </div>
+
+        {/* Ambient Gradient Overlays for Cinematic Red Gradient Depth */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#030305] via-transparent to-[#030305]/40" />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-transparent via-transparent to-[#030305] opacity-90 hidden lg:block" />
+        <div className="absolute top-0 left-0 w-96 h-96 bg-red-600/10 rounded-full blur-[120px] pointer-events-none" />
+
+        {/* Top-Left Floating Minimal HUD */}
+        <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 flex flex-col gap-2.5 pointer-events-auto">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/65 border border-red-500/25 backdrop-blur-md shadow-lg text-xs font-mono text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="font-bold text-white tracking-wide">3D GALAXY OBSERVATION</span>
+            </div>
+            
+            <SatellitesTrackerHUD 
+              onSelectDestination={(destId) => {
+                const match = MISSION_BRIEFS.find(b => b.targetDestinationId === destId);
+                if (match) {
+                  setHoveredMissionId(match.id);
+                }
+              }}
+            />
+          </div>
+
+          <div className="text-[11px] text-slate-400 font-mono hidden sm:block pl-1">
+            Highlighted Target: <span className="text-red-400 font-bold uppercase">{activeDestinationId}</span> · NASA Deep Space Network Tracking Active
+          </div>
+        </div>
+
+        {/* Bottom-Left 3D Space Controls Indicator */}
+        <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-20 pointer-events-none hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-red-500/20 text-slate-400 text-xs">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+          <span>Interactive 3D Galaxy: Drag to Orbit · Scroll to Zoom</span>
+        </div>
       </div>
 
-      {/* Top Sticky Navigation Bar */}
-      <header className="sticky top-0 z-30 w-full bg-[#f8f7f4]/95 dark:bg-[#09090d]/95 border-b border-slate-300 dark:border-white/10 transition-colors duration-150">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between">
-          {/* Logo & NASA Challenge Tag */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-sm bg-amber-500 flex items-center justify-center text-black font-mono font-black text-xs">
-              MF
-            </div>
-            <div>
-              <div className="font-display font-black text-xs sm:text-sm tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                <span>MISSIONFORGE</span>
-                <span className="text-[9px] px-1.5 py-0.2 rounded-sm bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-mono font-bold">
-                  [EXODUS TO NEW EDEN]
-                </span>
-              </div>
-              <div className="text-[9px] text-slate-500 font-mono tracking-widest uppercase">
-                2026 NASA Space Apps Challenge
-              </div>
-            </div>
+      {/* =========================================================================
+          RIGHT SIDE: MISSION SELECTION PANEL (BLACK THEME & RED GRADIENTS)
+          ========================================================================= */}
+      <div className="w-full lg:w-[480px] xl:w-[540px] h-[58vh] lg:h-full flex-shrink-0 z-20 flex flex-col bg-[#050508]/95 backdrop-blur-2xl border-t lg:border-t-0 lg:border-l border-red-500/20 shadow-2xl shadow-black relative overflow-hidden">
+        {/* Subtle Background Glow Inside Panel */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-red-600/10 rounded-full blur-[100px] pointer-events-none" />
+
+        {/* Panel Header */}
+        <div className="p-5 sm:p-6 border-b border-white/10 flex-shrink-0 bg-[#050508]/60 relative z-10">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-mono tracking-wider uppercase text-red-400 font-semibold flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+              Mission Directives
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-300 font-mono">
+              {MISSION_BRIEFS.length} Types Available
+            </span>
           </div>
 
-          {/* Quick Header Actions */}
-          <div className="flex items-center gap-1.5 text-xs font-mono">
-            {/* Theme Toggle (Light / Dark) */}
-            <button
-              onClick={() => {
-                sounds.playClick();
-                toggleTheme();
-              }}
-              className="px-2.5 py-1 rounded-sm border border-slate-300 dark:border-white/15 bg-slate-200/80 dark:bg-[#181822] hover:bg-slate-300 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer"
-              title="Toggle Light/Dark Theme"
-            >
-              {theme === 'dark' ? '[LIGHT]' : '[DARK]'}
-            </button>
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-1.5">
+            Select Mission <span className="red-gradient-text">Type</span>
+          </h2>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Choose an expedition profile to calibrate the starship hangar, payload science instrumentation, and delta-v trajectory.
+          </p>
 
-            {/* Sound Toggle */}
-            <button
-              onClick={toggleAudio}
-              className="px-2 py-1 rounded-sm border border-slate-300 dark:border-white/15 bg-slate-200/80 dark:bg-[#181822] hover:bg-slate-300 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer"
-              title="Toggle Sound Effects"
-            >
-              {soundEnabled ? '[AUDIO: ON]' : '[AUDIO: OFF]'}
-            </button>
-
-            {/* NASA Challenge Resources Button */}
-            <button
-              onClick={() => {
-                sounds.playClick();
-                setShowNasaLinksModal(true);
-              }}
-              className="px-2.5 py-1 rounded-sm border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 font-bold transition-colors cursor-pointer hidden sm:inline"
-            >
-              [NASA HUB]
-            </button>
-
-            {/* Cadet Guide / Education */}
-            <button
-              onClick={() => {
-                sounds.playClick();
-                setShowEduModal(true);
-              }}
-              className="px-2.5 py-1 rounded-sm border border-slate-300 dark:border-white/15 bg-slate-200/80 dark:bg-[#181822] hover:bg-slate-300 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 transition-colors hidden md:inline cursor-pointer"
-            >
-              [GUIDE]
-            </button>
-
-            {/* Direct Play Header Button */}
+          {/* Quick Launch Buttons */}
+          <div className="grid grid-cols-2 gap-2.5 mt-4">
             <button
               onClick={handleStartExodus}
-              className="px-3 py-1 rounded-sm bg-amber-500 hover:bg-amber-400 text-black font-bold uppercase tracking-wider transition-colors cursor-pointer ml-1"
+              className="red-gradient-btn px-3 py-2.5 rounded-xl font-medium text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-red-600/25 active:scale-[0.98]"
             >
-              [PLAY NOW ➔]
+              <span>Exodus Story Mode</span>
+              <span className="text-xs">→</span>
+            </button>
+            <button
+              onClick={handleDemoMission}
+              className="px-3 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 hover:border-red-500/40 text-slate-200 text-xs font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
+            >
+              <span>Instant Demo Rocket</span>
+              <span className="text-xs">⚡</span>
             </button>
           </div>
         </div>
-      </header>
 
-      {/* Main Container */}
-      <main className="relative z-10 w-full max-w-6xl px-4 sm:px-6 py-4 flex flex-col items-center">
-        {/* Hero Title & Mission Statement */}
-        <div className="text-center max-w-3xl mx-auto my-4 sm:my-6">
-          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-sm bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[11px] font-mono font-bold uppercase tracking-wider mb-2">
-            <span>[2026 NASA SPACE APPS CHALLENGE ENTRY]</span>
-          </div>
+        {/* Scrollable Mission Cards List */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3.5 scroll-smooth relative z-10">
+          {MISSION_BRIEFS.map((brief) => {
+            const dest = DESTINATIONS.find(d => d.id === brief.targetDestinationId);
+            const isHovered = hoveredMissionId === brief.id;
+            const isExodus = brief.id === 'exodus-new-eden';
 
-          <h1 className="font-display font-black text-4xl sm:text-6xl lg:text-7xl tracking-tight text-slate-900 dark:text-white mb-2">
-            MISSION<span className="text-amber-500">FORGE</span>
-          </h1>
+            return (
+              <motion.div
+                key={brief.id}
+                onMouseEnter={() => setHoveredMissionId(brief.id)}
+                onClick={() => setHoveredMissionId(brief.id)}
+                className={`relative rounded-2xl p-4 transition-all duration-200 cursor-pointer border ${
+                  isExodus
+                    ? isHovered
+                      ? 'bg-gradient-to-br from-red-950/60 via-[#0a0508] to-[#12060c] border-red-500 shadow-lg shadow-red-600/25 ring-1 ring-red-500/50'
+                      : 'bg-[#0a060a]/90 border-red-500/40 hover:border-red-500/70'
+                    : isHovered
+                    ? 'bg-white/[0.08] border-red-500/50 shadow-md shadow-red-950/40'
+                    : 'bg-white/[0.03] border-white/10 hover:border-white/20'
+                }`}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                {/* Featured Badge for Exodus */}
+                {isExodus && (
+                  <div className="absolute -top-2.5 right-4 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-red-600 to-rose-700 text-white font-mono text-[9px] font-bold tracking-wider uppercase shadow-sm">
+                    Flagship Expedition
+                  </div>
+                )}
 
-          <p className="font-mono text-xs text-slate-500 tracking-[0.25em] uppercase mb-2 font-bold">
-            DESIGN. DECIDE. LAUNCH. EXPLORE.
-          </p>
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="font-bold text-sm tracking-tight text-white">
+                        {brief.title}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-medium uppercase ${
+                        brief.difficulty === 'COMPLEX' 
+                          ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                          : brief.difficulty === 'MODERATE'
+                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                          : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      }`}>
+                        {brief.difficulty}
+                      </span>
+                    </div>
 
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-sans max-w-xl mx-auto leading-relaxed">
-            Earth atmosphere is depleted. Mars resources are exhausted. Engineer humanity interstellar colony starship and navigate to exoplanet New Eden.
-          </p>
+                    <div className="text-[11px] text-slate-400 flex items-center gap-2 mb-2 font-mono">
+                      <span>Target: {dest?.name || 'Solar Orbit'}</span>
+                      <span>·</span>
+                      <span className="text-red-400 font-semibold">${(brief.budget / 1000).toFixed(2)}B Budget</span>
+                      <span>·</span>
+                      <span>{brief.durationMonths} Mo</span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-300 leading-relaxed mb-3 line-clamp-2">
+                  {brief.objective}
+                </p>
+
+                {/* Capabilities Tags */}
+                <div className="flex flex-wrap gap-1.5 mb-3.5">
+                  {brief.requiredCapabilities.map((cap, i) => (
+                    <span 
+                      key={i} 
+                      className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/5 text-[10px] text-slate-400 font-mono"
+                    >
+                      {cap}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Direct Launch Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectMission(brief.id);
+                  }}
+                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    isHovered || isExodus
+                      ? 'red-gradient-btn text-white shadow-md shadow-red-600/30'
+                      : 'bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 border border-white/10'
+                  }`}
+                >
+                  <span>Equip & Launch Mission</span>
+                  <span>→</span>
+                </button>
+              </motion.div>
+            );
+          })}
         </div>
 
-        {/* 1. BRAG LAUNCH TRAILER & DEMO REEL */}
-        <div className="w-full mb-8">
-          <BragLaunchTrailerDemo onPlayNow={handleStartExodus} />
+        {/* Panel Footer */}
+        <div className="p-4 border-t border-white/10 bg-[#030305]/80 flex items-center justify-between text-xs text-slate-400 flex-shrink-0">
+          <button
+            onClick={() => setShowStoryModal(true)}
+            className="hover:text-red-400 transition-colors cursor-pointer text-[11px]"
+          >
+            Mission Lore & Story Prologue
+          </button>
+          <button
+            onClick={() => setShowNasaLinksModal(true)}
+            className="text-red-400 hover:text-red-300 transition-colors cursor-pointer font-medium text-[11px] flex items-center gap-1"
+          >
+            <span>NASA Space Apps Resources</span>
+            <span>↗</span>
+          </button>
         </div>
+      </div>
 
-        {/* 2. HOW TO PLAY IN 3 STEPS */}
-        <div className="w-full mb-8">
-          <KidHowToPlaySection 
-            onPlayNow={handleStartExodus} 
-            onSelectPreset={handleSelectPreset}
-          />
-        </div>
-
-        {/* 3. WHY AND HOW IT SOLVES THE CHALLENGE */}
-        <div className="w-full mb-8">
-          <WhyAndHowChallengeSection onOpenNasaModal={() => setShowNasaLinksModal(true)} />
-        </div>
-
-        {/* 4. FREQUENTLY ASKED QUESTIONS */}
-        <div className="w-full mb-8">
-          <CadetFAQSection />
-        </div>
-      </main>
-
-      {/* NASA Space Apps Challenge Reference Footer */}
-      <NASAChallengeFooterBar onOpenModal={() => setShowNasaLinksModal(true)} />
-
-      {/* Education / Cadet Guide Modal */}
+      {/* =========================================================================
+          MODALS & OVERLAYS
+          ========================================================================= */}
       <EducationModal
         isOpen={showEduModal}
         onClose={() => setShowEduModal(false)}
@@ -196,13 +275,11 @@ export const StartScreen: React.FC = () => {
         }}
       />
 
-      {/* Official NASA Challenge Links Modal */}
       <NASAChallengeLinksModal
         isOpen={showNasaLinksModal}
         onClose={() => setShowNasaLinksModal(false)}
       />
 
-      {/* Exodus Story Prologue Modal */}
       <StoryPrologueModal
         isOpen={showStoryModal}
         onClose={() => setShowStoryModal(false)}

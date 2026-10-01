@@ -9,116 +9,152 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #040711;
-  color: #f1f5f9;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #030305;
+  color: #f5f5f7;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   overflow: hidden;
   user-select: none;
+  letter-spacing: -0.012em;
 }
 
-/* Custom scrollbar for HUD panels */
+/* Red Gradient & Black Theme System Utilities */
+.red-gradient-text {
+  background: linear-gradient(135deg, #ef4444 0%, #f43f5e 50%, #fb7185 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.red-gradient-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 55%, #881337 100%);
+  color: #ffffff;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.red-gradient-btn:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 55%, #9f1239 100%);
+  box-shadow: 0 0 25px rgba(239, 68, 68, 0.4);
+}
+
+.red-card-border {
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  transition: all 0.2s ease;
+}
+
+.red-card-border:hover {
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.18);
+}
+
+/* Apple-style minimalist scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(16, 26, 56, 0.4);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(34, 54, 111, 0.8);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 229, 255, 0.6);
+  background: rgba(255, 255, 255, 0.32);
 }
 
-/* Aerospace HUD styling */
+html.light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Apple-inspired frosted glass panels */
 .hud-panel {
-  background: linear-gradient(135deg, rgba(16, 26, 56, 0.7) 0%, rgba(7, 11, 24, 0.85) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(56, 189, 248, 0.15);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  background: rgba(18, 18, 24, 0.72);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.5);
+  border-radius: 18px;
 }
 
 html.light .hud-panel {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.92) 100%);
-  border: 1px solid rgba(203, 213, 225, 0.8);
-  box-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.08);
-  color: #0f172a;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.08);
+  color: #1d1d1f;
+  border-radius: 18px;
 }
 
 .hud-panel-active {
-  border-color: rgba(0, 229, 255, 0.5);
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+  border-color: rgba(0, 113, 227, 0.5);
+  box-shadow: 0 0 0 1px rgba(0, 113, 227, 0.3), 0 12px 32px rgba(0, 113, 227, 0.15);
 }
 
 html.light .hud-panel-active {
-  border-color: rgba(2, 132, 199, 0.6);
-  box-shadow: 0 0 20px rgba(2, 132, 199, 0.2);
+  border-color: rgba(0, 113, 227, 0.6);
+  box-shadow: 0 0 0 1px rgba(0, 113, 227, 0.3), 0 12px 32px rgba(0, 113, 227, 0.12);
 }
 
 .hud-panel-alert {
-  border-color: rgba(239, 68, 68, 0.6);
-  box-shadow: 0 0 25px rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 12px 32px rgba(239, 68, 68, 0.15);
 }
 
-/* NASA Grid Background Pattern */
+/* NASA / Apple Clean Grid Background Pattern */
 .bg-grid-pattern {
-  background-size: 32px 32px;
+  background-size: 40px 40px;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
 }
 
 html.light .bg-grid-pattern {
   background-image: 
-    linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
 }
 
-/* Subtle CRT Scanline overlay */
+/* CRT Scanlines Disabled for Modern Apple Aesthetics */
 .scanlines {
   position: relative;
 }
 
 .scanlines::after {
-  content: " ";
-  display: block;
-  position: absolute;
-  top: 0; left: 0; bottom: 0; right: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
-  z-index: 99;
-  background-size: 100% 3px, 6px 100%;
-  pointer-events: none;
-  opacity: 0.35;
+  display: none !important;
 }
 
-/* Glowing text effects */
+/* Refined Clean Text Accents (No harsh neon text-shadows) */
 .glow-cyan {
-  text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+  text-shadow: none;
 }
 
 .glow-orange {
-  text-shadow: 0 0 10px rgba(255, 92, 0, 0.6);
+  text-shadow: none;
 }
 
 .glow-green {
-  text-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+  text-shadow: none;
 }
 
 .glow-red {
-  text-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+  text-shadow: none;
 }
 
 /* Monospace telemetry numbers */
 .telemetry-val {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Mono", "SF Pro Display", monospace;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
 }
 
 /* Pulse radar ring */
@@ -166,5 +202,72 @@ html.light .bg-grid-pattern {
 
 .nova-avatar {
   animation: nova-float 3s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   PRINT / PDF EXPORT STYLING FOR OFFICIAL NASA CERTIFICATES
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 100% !important;
+    width: 100% !important;
+    user-select: text !important;
+  }
+
+  #root, #root > div {
+    display: block !important;
+    background: transparent !important;
+    height: auto !important;
+    width: 100% !important;
+    overflow: visible !important;
+    position: static !important;
+  }
+
+  .print\:hidden,
+  button,
+  .scanlines::after,
+  nav,
+  header,
+  canvas {
+    display: none !important;
+  }
+
+  /* Make sure the modal overlay doesn't create a dark backdrop in print */
+  .fixed.inset-0 {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  #nasa-official-print-document {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
 

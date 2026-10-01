@@ -32,10 +32,12 @@ import {
   PAYLOAD_INSTRUMENTS 
 } from '../../data/missionsData';
 import { sounds } from '../../utils/soundEffects';
+import { NasaPrintableCertificate } from '../common/NasaPrintableCertificate';
 
 export const Screen10Results: React.FC = () => {
   const { state, resources, resetMission, cadetMode } = useMission();
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [printMode, setPrintMode] = useState<'certificate' | 'report'>('certificate');
 
   const result = state.lastResult;
   const brief = MISSION_BRIEFS.find(b => b.id === state.briefId);
@@ -88,59 +90,59 @@ export const Screen10Results: React.FC = () => {
                 </div>
                 <div>
                   <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                    <span className="px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/50 text-amber-300 font-mono text-[10px] font-bold uppercase tracking-wider">
-                      NASA CADET FLIGHT ACADEMY
+                    <span className="px-3 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-300 text-xs font-medium">
+                      NASA Cadet Flight Academy
                     </span>
-                    <span className="text-xs text-amber-300">★ CERTIFIED</span>
+                    <span className="text-xs text-amber-300 font-medium">★ Certified</span>
                   </div>
-                  <h2 className="font-display font-black text-xl sm:text-2xl text-white tracking-wide">
-                    JUNIOR ASTRONAUT WINGS AWARDED!
+                  <h2 className="font-bold text-xl sm:text-2xl text-white tracking-tight">
+                    Junior Astronaut Wings Awarded!
                   </h2>
-                  <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl font-sans">
-                    Commander Nova certifies that you designed, launched, and guided <strong className="text-white">{state.missionName}</strong> across interplanetary space to <strong className="text-white">{dest?.name}</strong>!
+                  <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl font-normal leading-relaxed">
+                    Commander Nova certifies that you designed, launched, and guided <strong className="text-white font-semibold">{state.missionName}</strong> across interplanetary space to <strong className="text-white font-semibold">{dest?.name}</strong>!
                   </p>
                 </div>
               </div>
 
               {/* Star Rating Badge */}
-              <div className="bg-space-950/80 p-3.5 rounded-2xl border border-amber-400/40 text-center shrink-0">
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest block mb-1">
-                  CADET RATING
+              <div className="bg-black/40 backdrop-blur-xl p-3.5 rounded-2xl border border-white/10 text-center shrink-0">
+                <span className="text-[10px] text-[#86868b] uppercase tracking-wider block mb-1 font-medium">
+                  Cadet Rating
                 </span>
                 <div className="flex items-center gap-1 justify-center text-amber-400 text-lg">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star 
                       key={i} 
-                      className={`w-5 h-5 ${i < starCount ? 'text-amber-400 fill-amber-400' : 'text-slate-700'}`} 
+                      className={`w-4 h-4 ${i < starCount ? 'text-amber-400 fill-amber-400' : 'text-slate-700'}`} 
                     />
                   ))}
                 </div>
-                <span className="text-xs font-mono font-bold text-white mt-1 block">
-                  {result.overallScore} / 100 POINTS
+                <span className="text-xs font-semibold text-white mt-1 block telemetry-val">
+                  {result.overallScore} / 100 Points
                 </span>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* Outcome Header Banner */}
-        <div className={`p-6 rounded-3xl border mb-6 text-center relative overflow-hidden ${
+        {/* Outcome Header Banner (Apple Frosted Glass) */}
+        <div className={`p-6 rounded-3xl border mb-6 text-center relative overflow-hidden backdrop-blur-xl ${
           isSuccess 
-            ? 'bg-emerald-950/40 border-emerald-500/80 shadow-2xl shadow-emerald-500/15' 
+            ? 'bg-emerald-500/10 border-emerald-500/30 shadow-xl shadow-emerald-500/10' 
             : isPartial
-              ? 'bg-amber-950/40 border-amber-500/80 shadow-2xl shadow-amber-500/15'
-              : 'bg-red-950/40 border-red-500/80 shadow-2xl shadow-red-500/15'
+              ? 'bg-amber-500/10 border-amber-500/30 shadow-xl shadow-amber-500/10'
+              : 'bg-rose-500/10 border-rose-500/30 shadow-xl shadow-rose-500/10'
         }`}>
           <div className="flex items-center justify-center gap-2.5 mb-2">
             {isSuccess ? (
-              <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+              <CheckCircle2 className="w-7 h-7 text-emerald-400" />
             ) : isPartial ? (
-              <AlertTriangle className="w-8 h-8 text-amber-400" />
+              <AlertTriangle className="w-7 h-7 text-amber-400" />
             ) : (
-              <XCircle className="w-8 h-8 text-red-400" />
+              <XCircle className="w-7 h-7 text-rose-400" />
             )}
-            <h1 className={`font-display font-black text-2xl sm:text-4xl tracking-wider uppercase ${
-              isSuccess ? 'text-emerald-400' : isPartial ? 'text-amber-400' : 'text-red-400'
+            <h1 className={`font-bold text-2xl sm:text-3xl tracking-tight uppercase ${
+              isSuccess ? 'text-emerald-400' : isPartial ? 'text-amber-400' : 'text-rose-400'
             }`}>
               {result.outcome}
             </h1>
@@ -271,114 +273,93 @@ export const Screen10Results: React.FC = () => {
         </div>
 
         {/* Critical Decision & Engineering Lesson */}
-        <div className="p-5 rounded-2xl bg-nasa-orange/10 border border-nasa-orange/40 mb-8">
-          <div className="flex items-center gap-2 text-nasa-orange font-mono font-bold text-xs uppercase tracking-wider mb-1.5">
-            <Sparkles className="w-4 h-4" />
-            <span>CRITICAL ENGINEERING DECISION ANALYSIS</span>
+        <div className="p-5 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/10 mb-8">
+          <div className="flex items-center gap-2 text-sky-400 font-medium text-xs tracking-tight mb-2">
+            <Sparkles className="w-4 h-4 text-sky-400" />
+            <span className="font-semibold uppercase text-[11px] tracking-wider text-sky-300">Engineering Insight</span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-sans">
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
             {result.criticalDecisionNote}
           </p>
         </div>
       </div>
 
       {/* Bottom Action Controls */}
-      <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs">
-        <button
-          onClick={() => {
-            sounds.playClick();
-            setShowPrintModal(true);
-          }}
-          className="px-5 py-3 rounded-xl bg-space-900 hover:bg-space-850 border border-slate-700 text-slate-200 font-semibold transition-all flex items-center gap-2 shadow-md"
-        >
-          <Printer className="w-4 h-4 text-nasa-cyan" />
-          <span>VIEW / PRINT NASA CERTIFICATE</span>
-        </button>
+      <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-3 text-xs font-sans">
+        {/* Distinct PDF Action Buttons: Astronaut Certificate vs Technical Mission Report */}
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+          {/* Certificate Download Button */}
+          <button
+            onClick={() => {
+              sounds.playClick();
+              setPrintMode('certificate');
+              setShowPrintModal(true);
+            }}
+            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/40 text-amber-200 font-medium transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer hover:border-amber-400 active:scale-[0.98]"
+            title="Download Junior Astronaut Wings Official Parchment Certificate"
+          >
+            <Award className="w-4 h-4 text-amber-400" />
+            <span>Astronaut Certificate (PDF)</span>
+          </button>
 
-        <button
-          onClick={() => {
-            sounds.playClick();
-            resetMission();
-          }}
-          className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-nasa-orange to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-bold tracking-wider uppercase transition-all shadow-xl shadow-nasa-orange/25 flex items-center gap-2 cursor-pointer hover:scale-102"
-        >
-          <RotateCcw className="w-4 h-4" />
-          <span>DESIGN ANOTHER MISSION 🚀</span>
-        </button>
+          {/* Mission Report Download Button */}
+          <button
+            onClick={() => {
+              sounds.playClick();
+              setPrintMode('report');
+              setShowPrintModal(true);
+            }}
+            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-sky-500/30 text-sky-200 font-medium transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer hover:border-sky-400 active:scale-[0.98]"
+            title="Download Technical NASA Flight Telemetry & Systems Report"
+          >
+            <FileText className="w-4 h-4 text-sky-400" />
+            <span>Mission Report (PDF)</span>
+          </button>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto">
+          <button
+            onClick={() => {
+              sounds.playClick();
+              resetMission('start');
+            }}
+            className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-300 font-medium transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+          >
+            <span>Home Menu</span>
+          </button>
+
+          <button
+            onClick={() => {
+              sounds.playSuccess();
+              resetMission('brief');
+            }}
+            className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-[#0071e3] hover:bg-[#0077ed] text-white font-semibold transition-all shadow-md shadow-[#0071e3]/20 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Select Another Project</span>
+          </button>
+        </div>
       </div>
 
       {/* Official Printable Mission Certificate Modal */}
       {showPrintModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="relative w-full max-w-3xl bg-slate-900 border-2 border-amber-500/60 rounded-3xl shadow-2xl p-6 sm:p-8 my-8 text-slate-900 font-sans print:bg-white print:text-black print:p-0">
-            {/* NASA Cadet Certificate Header */}
-            <div className="border-b-2 border-amber-500/40 pb-4 mb-6 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">🎖️</span>
-                <div>
-                  <h2 className="text-lg sm:text-xl font-bold font-mono text-white tracking-widest uppercase">
-                    NATIONAL AERONAUTICS AND SPACE ADMINISTRATION
-                  </h2>
-                  <div className="text-xs font-mono text-amber-400">
-                    JUNIOR ASTRONAUT CADET FLIGHT CERTIFICATE
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowPrintModal(false)}
-                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs print:hidden"
-              >
-                CLOSE
-              </button>
-            </div>
-
-            {/* Document Data */}
-            <div className="space-y-4 text-xs font-mono text-slate-300 leading-relaxed mb-6">
-              <div className="grid grid-cols-2 gap-4 p-4 bg-slate-950/80 rounded-2xl border border-slate-800">
-                <div><strong>MISSION DESIGNATION:</strong> {state.missionName}</div>
-                <div><strong>FLIGHT OUTCOME:</strong> <span className={isSuccess ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>{result.outcome}</span></div>
-                <div><strong>OBJECTIVE:</strong> {brief?.title}</div>
-                <div><strong>DESTINATION:</strong> {dest?.name} ({dest?.distance})</div>
-                <div><strong>SPACECRAFT BUS:</strong> {bus?.name} ({bus?.mass} kg)</div>
-                <div><strong>LAUNCH VEHICLE:</strong> {rocket?.name}</div>
-                <div><strong>POWER SYSTEM:</strong> {power?.name} ({resources.powerGenerated}W generated)</div>
-                <div><strong>COMMUNICATION:</strong> {comms?.name} ({comms?.dataRateMbps} Mbps)</div>
-                <div><strong>PROPULSION:</strong> {prop?.name} ({resources.deltaVAvailable} m/s Δv)</div>
-                <div><strong>TRAJECTORY:</strong> {traj?.name}</div>
-                <div><strong>TOTAL MASS:</strong> {resources.totalMass.toLocaleString()} kg / {resources.massLimit.toLocaleString()} kg</div>
-                <div><strong>TOTAL BUDGET:</strong> ${resources.totalCost}M / ${resources.budgetLimit}M</div>
-                <div><strong>OVERALL SCORE:</strong> {result.overallScore} / 100 ({starCount} Stars ⭐)</div>
-                <div><strong>SCIENCE RETURN:</strong> {result.scienceDataPercent}% of goals</div>
-              </div>
-
-              <div>
-                <strong className="text-white block mb-1">SCIENTIFIC INSTRUMENTATION PACKAGE:</strong>
-                <p>{payloads.map(p => `${p.name} (+${p.scienceValue} pts)`).join(', ')}</p>
-              </div>
-
-              <div>
-                <strong className="text-white block mb-1">COMMANDER EVALUATION SUMMARY:</strong>
-                <p className="font-sans text-xs text-slate-200">{result.summary}</p>
-              </div>
-
-              <div>
-                <strong className="text-white block mb-1">AEROSPACE ENGINEERING LESSON:</strong>
-                <p className="font-sans text-xs text-slate-200">{result.criticalDecisionNote}</p>
-              </div>
-            </div>
-
-            {/* Print trigger */}
-            <div className="pt-4 border-t border-slate-800 flex justify-end gap-3 print:hidden">
-              <button
-                onClick={() => window.print()}
-                className="px-5 py-2.5 rounded-xl bg-nasa-cyan hover:bg-cyan-400 text-black font-mono font-bold text-xs flex items-center gap-2 shadow-lg"
-              >
-                <Printer className="w-4 h-4" />
-                <span>PRINT DIPLOMA / PDF</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        <NasaPrintableCertificate
+          state={state}
+          resources={resources}
+          result={result}
+          brief={brief}
+          dest={dest}
+          bus={bus}
+          rocket={rocket}
+          power={power}
+          comms={comms}
+          prop={prop}
+          traj={traj}
+          payloads={payloads}
+          starCount={starCount}
+          initialMode={printMode}
+          onClose={() => setShowPrintModal(false)}
+        />
       )}
     </div>
   );

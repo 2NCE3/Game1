@@ -361,64 +361,38 @@ export const LowPolyWorldGame: React.FC<LowPolyWorldGameProps> = ({
           </span>
         </div>
 
-        {/* Navigation & Perspective Mode Switchers */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Navigation & Necessary Controls */}
+        <div className="flex items-center gap-2">
           {onEnterLaunchPad && (
             <button
               onClick={() => {
                 sounds.playClick();
                 onEnterLaunchPad();
               }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-sm bg-blue-950/80 hover:bg-blue-900 border border-blue-500/50 text-blue-200 text-[10px] sm:text-[11px] font-mono font-bold transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-blue-950/90 hover:bg-blue-900 border border-blue-500/60 text-blue-200 text-xs font-mono font-bold transition-colors shadow-sm"
             >
-              <Rocket className="w-3 h-3 text-blue-400" />
+              <Rocket className="w-3.5 h-3.5 text-blue-400" />
               <span>LAUNCH PAD</span>
-            </button>
-          )}
-
-          {onEnterCockpit && (
-            <button
-              onClick={() => {
-                sounds.playClick();
-                onEnterCockpit();
-              }}
-              className="hidden md:flex items-center gap-1 px-2 py-1 rounded-sm bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-200 text-[10px] sm:text-[11px] font-mono font-bold transition-colors"
-            >
-              <span>COCKPIT</span>
-            </button>
-          )}
-
-          {onEnterLander && (
-            <button
-              onClick={() => {
-                sounds.playClick();
-                onEnterLander();
-              }}
-              className="hidden md:flex items-center gap-1 px-2 py-1 rounded-sm bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-200 text-[10px] sm:text-[11px] font-mono font-bold transition-colors"
-            >
-              <span>LANDER</span>
             </button>
           )}
 
           <div className="h-4 w-px bg-slate-800 mx-1" />
 
-          {(['BASE_INSPECT', 'CHASE_CAM', 'CINEMATIC', 'ORBIT_CAM'] as const).map(mode => (
+          {/* Compact Camera View Mode (Base / Orbit) */}
+          {(['BASE_INSPECT', 'ORBIT_CAM'] as const).map(mode => (
             <button
               key={mode}
               onClick={() => {
                 sounds.playClick();
                 setCameraMode(mode);
               }}
-              className={`px-2.5 py-1 rounded-sm text-[10px] sm:text-[11px] font-mono font-bold transition-all ${
+              className={`px-2.5 py-1 rounded text-xs font-mono font-bold transition-all ${
                 cameraMode === mode
                   ? 'bg-nasa-cyan text-black shadow-md'
                   : 'bg-space-900 border border-slate-800 text-slate-300 hover:bg-slate-800'
               }`}
             >
-              {mode === 'BASE_INSPECT' && 'BASE'}
-              {mode === 'CHASE_CAM' && 'CHASE'}
-              {mode === 'CINEMATIC' && 'CINEMATIC'}
-              {mode === 'ORBIT_CAM' && 'ORBIT'}
+              {mode === 'BASE_INSPECT' ? 'BASE' : 'ORBIT'}
             </button>
           ))}
 
@@ -430,10 +404,10 @@ export const LowPolyWorldGame: React.FC<LowPolyWorldGameProps> = ({
                 sounds.playClick();
                 onReturnToHangar();
               }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-sm bg-red-950/60 hover:bg-red-900/80 border border-red-800 text-red-300 text-[11px] font-mono transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-red-950/60 hover:bg-red-900 border border-red-800 text-red-300 text-xs font-mono transition-colors"
             >
               <Square className="w-3 h-3" />
-              <span className="hidden sm:inline">ABORT</span>
+              <span>ABORT</span>
             </button>
           )}
         </div>

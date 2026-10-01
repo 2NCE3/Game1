@@ -1,0 +1,10 @@
+{
+  "name": "nasa-missionforge-brag",
+  "version": "1.0.0",
+  "description": "NASA MissionForge launch brag video — 21 seconds cinematic",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "duration": 21,
+  "skill": "brag"
+}
