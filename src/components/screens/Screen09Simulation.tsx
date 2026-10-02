@@ -535,10 +535,23 @@ export const Screen09Simulation: React.FC = () => {
           <AnimatePresence>
             {showDescentPrompt && (
               <motion.div
-                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.92 }}
+                className="absolute inset-0 z-40 flex items-center justify-center p-6"
+                style={{ backdropFilter: 'blur(6px)', background: 'rgba(3,10,25,0.45)' }}
+              >
+              <motion.div
+                initial={{ opacity: 0, y: 24, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                className="absolute inset-x-4 sm:inset-x-12 top-16 z-40 max-w-xl mx-auto p-5 sm:p-6 bg-space-900/95 border border-cyan-500 rounded-sm shadow-2xl backdrop-blur-2xl"
+                exit={{ opacity: 0, y: -16, scale: 0.95 }}
+                className="w-full max-w-md p-6 sm:p-7 rounded-2xl shadow-2xl border border-white/10"
+                style={{
+                  background: 'rgba(8, 20, 48, 0.55)',
+                  backdropFilter: 'blur(28px)',
+                  WebkitBackdropFilter: 'blur(28px)',
+                  boxShadow: '0 0 0 1px rgba(34,211,238,0.18), 0 24px 64px rgba(0,0,0,0.55)',
+                }}
               >
                 <div className="flex items-center gap-3 pb-3 mb-3 border-b border-cyan-500/30 text-cyan-400 font-mono text-xs font-bold tracking-wider uppercase">
                   <div className="w-8 h-8 rounded-sm bg-cyan-500/20 border border-cyan-500/50 flex items-center justify-center text-xs font-bold shrink-0">
@@ -581,6 +594,7 @@ export const Screen09Simulation: React.FC = () => {
                     <span>HOLD ORBIT</span>
                   </button>
                 </div>
+              </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
